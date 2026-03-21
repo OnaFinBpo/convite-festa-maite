@@ -486,10 +486,40 @@ function DashboardPage(props) {
   var total=d.tasks.length,done=d.tasks.filter(function(t){return t.status==='done'}).length;
   var pct=total?Math.round(done/total*100):0;
   var GUEST_GOAL=100;
-  var tg=d.guests.reduce(function(s,g){return s+(g.adults||0)+(g.kids||0)},0);
-  var cg=d.guests.filter(function(g){return g.status==='confirmado'}).reduce(function(s,g){return s+(g.adults||0)+(g.kids||0)},0);
   var tb=d.vendors.reduce(function(s,v){return s+Number(v.value||0)},0);
   var tp=d.vendors.reduce(function(s,v){return s+Number(v.paid||0)},0);
+
+  /* Dados de convidados do Supabase */
+  var _g1=useState({total:0,contam:0,isentos:0,adultos:0,criancas:0,under6:0});
+  var guestStats=_g1[0];var setGuestStats=_g1[1];
+
+  useEffect(function(){
+    if(!sb)return;
+    sb.from('festa_rsvps').select('*').eq('status','confirmado').then(function(res){
+      if(res.error||!res.data)return;
+      var data=res.data;
+      var totalP=data.length;
+      var under6=0;var adultos=0;var criancas=0;
+      /* Nomes isentos: aniversariante + pais + 2 irmãos (contrato permite max 2) */
+      var isentosNomes=['maitê souza nogueira','rodrigo mendes porto nogueira','vanniely caroline gonçalves souza','ana vitória nogueira','igor pedro nogueira'];
+      /* Nota: Alicia (3ª irmã) NÃO é isenta pois contrato permite max 2 irmãos */
+      data.forEach(function(r){
+        if(r.guest_age!==null&&r.guest_age<12)criancas++;else adultos++;
+        if(r.guest_age!==null&&r.guest_age<6)under6++;
+      });
+      var isentosCount=0;
+      data.forEach(function(r){
+        var nome=r.guest_name.toLowerCase().trim();
+        var isIsento=isentosNomes.indexOf(nome)>=0;
+        var isUnder6=r.guest_age!==null&&r.guest_age<6;
+        if(isIsento||isUnder6)isentosCount++;
+      });
+      var contam=totalP-isentosCount;
+      setGuestStats({total:totalP,contam:contam,isentos:isentosCount,adultos:adultos,criancas:criancas,under6:under6});
+    });
+  },[]);
+
+  var gPct=GUEST_GOAL>0?Math.min(100,Math.round(guestStats.contam/GUEST_GOAL*100)):0;
 
   return React.createElement('div',null,
     React.createElement(PageNav,{title:'Olá, '+u.name+'!',subtitle:'Visão geral da organização da festa'}),
@@ -501,9 +531,34 @@ function DashboardPage(props) {
     ),
     React.createElement('div',{className:'kpi-grid'},
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'},onClick:function(){sp('tasks')}},React.createElement('div',{className:'kpi-icon',style:{background:'var(--pink-100)',color:'var(--pink-600)'}},'✓'),React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,done+'/'+total),React.createElement('p',null,'Tarefas concluídas'),React.createElement('div',{className:'progress-bar',style:{width:120,marginTop:4}},React.createElement('div',{className:'progress-fill',style:{width:pct+'%',background:'var(--pink-500)'}})))),
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--blue)'},onClick:function(){sp('guests')}},React.createElement('div',{className:'kpi-icon',style:{background:'var(--blue-light)',color:'var(--blue)'}},'👥'),React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,cg+'/'+GUEST_GOAL),React.createElement('p',null,'Convidados confirmados'),React.createElement('div',{className:'progress-bar',style:{width:120,marginTop:4}},React.createElement('div',{className:'progress-fill',style:{width:Math.min(100,Math.round(cg/GUEST_GOAL*100))+'%',background:'var(--blue)'}})))),
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--blue)'},onClick:function(){sp('guests')}},React.createElement('div',{className:'kpi-icon',style:{background:'var(--blue-light)',color:'var(--blue)'}},'👥'),React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,guestStats.contam+'/'+GUEST_GOAL),React.createElement('p',null,'Contam no pacote'),React.createElement('div',{className:'progress-bar',style:{width:120,marginTop:4}},React.createElement('div',{className:'progress-fill',style:{width:gPct+'%',background:'var(--blue)'}})))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--green)'},onClick:function(){sp('budget')}},React.createElement('div',{className:'kpi-icon',style:{background:'var(--green-light)',color:'var(--green)'}},'$'),React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,fmtMoney(tb)),React.createElement('p',null,'Orçamento total'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--orange)'},onClick:function(){sp('budget')}},React.createElement('div',{className:'kpi-icon',style:{background:'var(--orange-light)',color:'var(--orange)'}},'⏳'),React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,fmtMoney(tb-tp)),React.createElement('p',null,'A pagar')))
+    ),
+
+    /* Card de Contagem de Convidados (Supabase) */
+    React.createElement('div',{className:'card',style:{marginBottom:16,cursor:'pointer'},onClick:function(){sp('guests')}},
+      React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'📊 Contagem de Convidados — Pacote Buffet')),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginTop:8}},
+        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--blue-light)',borderRadius:10}},
+          React.createElement('div',{style:{fontSize:'1.5rem',fontWeight:700,color:'var(--blue)'}},guestStats.total),
+          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Total confirmados')
+        ),
+        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--green-light)',borderRadius:10}},
+          React.createElement('div',{style:{fontSize:'1.5rem',fontWeight:700,color:'var(--green)'}},guestStats.contam),
+          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Contam no pacote')
+        ),
+        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--orange-light)',borderRadius:10}},
+          React.createElement('div',{style:{fontSize:'1.5rem',fontWeight:700,color:'var(--orange)'}},guestStats.isentos),
+          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Isentos (contrato)')
+        )
+      ),
+      React.createElement('div',{style:{display:'flex',justifyContent:'space-between',marginTop:10,fontSize:'0.78rem',color:'var(--gray-500)'}},
+        React.createElement('span',null,'🧑 Adultos: '+guestStats.adultos),
+        React.createElement('span',null,'🧒 Crianças: '+guestStats.criancas),
+        React.createElement('span',null,'👶 < 6 anos: '+guestStats.under6)
+      ),
+      React.createElement('div',{style:{fontSize:'0.72rem',color:'var(--gray-400)',marginTop:8,fontStyle:'italic'}},'Isentos: aniversariante + pais + 2 irmãos + crianças < 6 anos')
     ),
     React.createElement('div',{className:'card'},
       React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'Progresso — '+pct+'%')),
