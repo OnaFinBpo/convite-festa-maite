@@ -9,11 +9,11 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Maitê faz 5 anos! 🎀 Venha festejar!">
 <meta property="og:description" content="Você está convidado(a) para o aniversário da Maitê! Tema Minnie Rosa 🎀 26 de Abril • 18h30 • Doce Alegria Buffet">
-<meta property="og:image" content="https://festa-maite-pwa-deploy.vercel.app/og-preview.jpg">
+<meta property="og:image" content="https://convite-festa-maite.vercel.app/og-preview.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:type" content="image/jpeg">
-<meta property="og:url" content="https://festa-maite-pwa-deploy.vercel.app">
+<meta property="og:url" content="https://convite-festa-maite.vercel.app">
 <meta property="og:site_name" content="Convite Maitê 5 Anos">
 <meta property="og:locale" content="pt_BR">
 
@@ -21,7 +21,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Maitê faz 5 anos! 🎀 Venha festejar!">
 <meta name="twitter:description" content="Você está convidado(a) para o aniversário da Maitê! Tema Minnie Rosa 🎀 26 de Abril • 18h30 • Doce Alegria Buffet">
-<meta name="twitter:image" content="https://festa-maite-pwa-deploy.vercel.app/og-preview.jpg">
+<meta name="twitter:image" content="https://convite-festa-maite.vercel.app/og-preview.jpg">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@400;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
@@ -217,114 +217,33 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 </div>
 
 <script>
-var audioCtx,musicPlaying=false,musicMuted=false,gainNode;
+var bgMusic=document.getElementById('bgMusic');
+var musicMuted=false;
 
-function createMusic(){
-  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  gainNode=audioCtx.createGain();
-  gainNode.gain.value=0.12;
-  gainNode.connect(audioCtx.destination);
-
-  // Cute music-box melody inspired by party themes - bright major key
-  var bpm=140,beat=60/bpm;
-  // Notes as frequencies (C major / F major party feel)
-  var C4=261.63,D4=293.66,E4=329.63,F4=349.23,G4=392,A4=440,B4=493.88;
-  var C5=523.25,D5=587.33,E5=659.25,F5=698.46,G5=784;
-
-  // Melody pattern (note, duration in beats) - cheerful bouncy party tune
-  var melody=[
-    [E5,0.5],[D5,0.5],[C5,0.5],[D5,0.5],[E5,0.5],[E5,0.5],[E5,1],
-    [D5,0.5],[D5,0.5],[D5,1],[E5,0.5],[G5,0.5],[G5,1],
-    [E5,0.5],[D5,0.5],[C5,0.5],[D5,0.5],[E5,0.5],[E5,0.5],[E5,0.5],[E5,0.5],
-    [D5,0.5],[D5,0.5],[E5,0.5],[D5,0.5],[C5,2],
-    // Part B - higher energy
-    [C5,0.5],[E5,0.5],[G5,1],[F5,0.5],[E5,0.5],[D5,1],
-    [C5,0.5],[D5,0.5],[E5,0.5],[F5,0.5],[G5,2],
-    [G5,0.5],[F5,0.5],[E5,0.5],[D5,0.5],[C5,0.5],[D5,0.5],[E5,1],
-    [D5,0.75],[C5,0.25],[C5,2]
-  ];
-
-  // Bass pattern
-  var bass=[
-    [C4,2],[G4,2],[C4,2],[G4,2],
-    [F4,2],[C4,2],[G4,2],[C4,2],
-    [C4,2],[E4,2],[F4,2],[G4,2],
-    [A4,2],[F4,2],[G4,2],[C4,2]
-  ];
-
-  var totalBeats=0;melody.forEach(function(n){totalBeats+=n[1]});
-  var loopDur=totalBeats*beat;
-
-  function scheduleLoop(startTime){
-    var t=startTime;
-    melody.forEach(function(n){
-      var osc=audioCtx.createOscillator();
-      var env=audioCtx.createGain();
-      osc.type='triangle';
-      osc.frequency.value=n[0];
-      env.gain.setValueAtTime(0,t);
-      env.gain.linearRampToValueAtTime(0.3,t+0.02);
-      env.gain.exponentialRampToValueAtTime(0.01,t+n[1]*beat*0.9);
-      osc.connect(env);env.connect(gainNode);
-      osc.start(t);osc.stop(t+n[1]*beat);
-      t+=n[1]*beat;
-    });
-
-    // Bass
-    var tb=startTime;
-    bass.forEach(function(n){
-      var osc=audioCtx.createOscillator();
-      var env=audioCtx.createGain();
-      osc.type='sine';
-      osc.frequency.value=n[0]*0.5;
-      env.gain.setValueAtTime(0,tb);
-      env.gain.linearRampToValueAtTime(0.08,tb+0.03);
-      env.gain.exponentialRampToValueAtTime(0.005,tb+n[1]*beat*0.8);
-      osc.connect(env);env.connect(gainNode);
-      osc.start(tb);osc.stop(tb+n[1]*beat);
-      tb+=n[1]*beat;
-    });
-
-    // Soft chime accents
-    [0,4,8,12].forEach(function(b){
-      var osc=audioCtx.createOscillator();
-      var env=audioCtx.createGain();
-      osc.type='sine';
-      osc.frequency.value=C5*2;
-      env.gain.setValueAtTime(0,startTime+b*beat);
-      env.gain.linearRampToValueAtTime(0.04,startTime+b*beat+0.01);
-      env.gain.exponentialRampToValueAtTime(0.001,startTime+b*beat+0.5);
-      osc.connect(env);env.connect(gainNode);
-      osc.start(startTime+b*beat);osc.stop(startTime+b*beat+0.6);
-    });
-
-    setTimeout(function(){if(musicPlaying&&!audioCtx.closed)scheduleLoop(audioCtx.currentTime+0.05);},(loopDur-0.5)*1000);
-  }
-
-  scheduleLoop(audioCtx.currentTime);
-  musicPlaying=true;
-  var btn=document.getElementById('musicBtn');
-  btn.classList.add('vis');
+function startMusic(){
+  bgMusic.volume=0.25;
+  bgMusic.play().catch(function(){});
+  document.getElementById('musicBtn').classList.add('vis');
 }
 
 function toggleMusic(){
-  if(!audioCtx)return;
   musicMuted=!musicMuted;
   var btn=document.getElementById('musicBtn');
   if(musicMuted){
-    gainNode.gain.linearRampToValueAtTime(0,audioCtx.currentTime+0.3);
-    btn.classList.add('muted');btn.innerHTML='&#x1F507;';
+    bgMusic.pause();
+    btn.classList.add('muted');btn.innerHTML='\u{1F507}';
   }else{
-    gainNode.gain.linearRampToValueAtTime(0.12,audioCtx.currentTime+0.3);
-    btn.classList.remove('muted');btn.innerHTML='&#x1F3B5;';
+    bgMusic.play();
+    btn.classList.remove('muted');btn.innerHTML='\u{1F3B5}';
   }
 }
 
-function openEnv(){var s=document.getElementById('envS');s.classList.add('tap');createMusic();for(var i=0;i<20;i++)setTimeout(function(){var sp=document.createElement('div');sp.className='sparkle';sp.style.left=Math.random()*innerWidth+'px';sp.style.top=Math.random()*innerHeight+'px';sp.style.background=['#f5c518','#e91e8c','#ff69b4','#fff'][Math.floor(Math.random()*4)];sp.style.width=sp.style.height=(Math.random()*6+3)+'px';document.body.appendChild(sp);setTimeout(function(){sp.remove()},1500)},i*50);setTimeout(function(){s.classList.add('hid');var m=document.getElementById('mainC');m.classList.add('vis');setTimeout(function(){s.style.display='none'},800)},800)}
+function openEnv(){var s=document.getElementById('envS');s.classList.add('tap');startMusic();for(var i=0;i<20;i++)setTimeout(function(){var sp=document.createElement('div');sp.className='sparkle';sp.style.left=Math.random()*innerWidth+'px';sp.style.top=Math.random()*innerHeight+'px';sp.style.background=['#f5c518','#e91e8c','#ff69b4','#fff'][Math.floor(Math.random()*4)];sp.style.width=sp.style.height=(Math.random()*6+3)+'px';document.body.appendChild(sp);setTimeout(function(){sp.remove()},1500)},i*50);setTimeout(function(){s.classList.add('hid');var m=document.getElementById('mainC');m.classList.add('vis');setTimeout(function(){s.style.display='none'},800)},800)}
 var c=document.getElementById('fh');['&#x1F496;','&#x1F380;','&#x2764;','&#x1F49D;','&#x2728;'].forEach(function(){for(var i=0;i<3;i++){var h=document.createElement('div');h.className='fht';h.innerHTML=['&#x1F496;','&#x1F380;','&#x2764;','&#x1F49D;','&#x2728;'][Math.floor(Math.random()*5)];h.style.left=Math.random()*100+'%';h.style.animationDuration=(Math.random()*10+10)+'s';h.style.animationDelay=(Math.random()*10)+'s';h.style.fontSize=(Math.random()*16+14)+'px';c.appendChild(h)}});
 new IntersectionObserver(function(e){e.forEach(function(en){if(en.isIntersecting)en.target.classList.add('vis')})},{threshold:.2}).observe(document.querySelectorAll('[data-a]')[0]);
 document.querySelectorAll('[data-a]').forEach(function(el){new IntersectionObserver(function(e){e.forEach(function(en){if(en.isIntersecting)en.target.classList.add('vis')})},{threshold:.2}).observe(el)});
 function upd(){var ev=new Date('2026-04-26T18:30:00-03:00'),n=new Date(),d=ev-n;if(d<=0){document.getElementById('cD').textContent='0';document.getElementById('cH').textContent='0';document.getElementById('cM').textContent='0';document.getElementById('cS').textContent='0';return}document.getElementById('cD').textContent=Math.floor(d/864e5);document.getElementById('cH').textContent=String(Math.floor(d%864e5/36e5)).padStart(2,'0');document.getElementById('cM').textContent=String(Math.floor(d%36e5/6e4)).padStart(2,'0');document.getElementById('cS').textContent=String(Math.floor(d%6e4/1e3)).padStart(2,'0')}upd();setInterval(upd,1000);
 </script>
+<audio id="bgMusic" loop preload="auto"><source src="musica.mp3" type="audio/mpeg"></audio>
 </body>
 </html>
