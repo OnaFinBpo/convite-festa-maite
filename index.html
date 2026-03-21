@@ -217,16 +217,19 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 </div>
 
 <script>
-var bgMusic=document.getElementById('bgMusic');
+var bgMusic=null;
 var musicMuted=false;
 
 function startMusic(){
+  bgMusic=document.getElementById('bgMusic');
+  if(!bgMusic)return;
   bgMusic.volume=0.25;
   bgMusic.play().catch(function(){});
   document.getElementById('musicBtn').classList.add('vis');
 }
 
 function toggleMusic(){
+  if(!bgMusic)return;
   musicMuted=!musicMuted;
   var btn=document.getElementById('musicBtn');
   if(musicMuted){
