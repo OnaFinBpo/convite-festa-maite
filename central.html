@@ -56,7 +56,7 @@ body{font-family:'Quicksand',sans-serif;background:var(--pink-50);color:var(--gr
 @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
 
 /* SIDEBAR */
-.sidebar{width:260px;background:linear-gradient(180deg,var(--pink-800) 0%,var(--pink-900) 100%);color:#fff;padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s ease}
+.sidebar{width:260px;background:linear-gradient(180deg,var(--pink-800) 0%,var(--pink-900) 100%);color:#fff;padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:102;transition:transform .3s ease}
 .sidebar-header{padding:24px 20px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1)}
 .sidebar-header h1{font-family:'Pacifico',cursive;font-size:1.4rem;color:var(--pink-200);margin-bottom:4px}
 .sidebar-header p{font-size:0.75rem;color:var(--pink-300);opacity:0.8}
@@ -192,9 +192,10 @@ textarea{resize:vertical;min-height:80px}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
 /* MOBILE */
-.mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:var(--pink-800);color:#fff;z-index:99;padding:0 16px;align-items:center;justify-content:space-between}
-.hamburger{width:40px;height:40px;border:none;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
-.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99}
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:var(--pink-800);color:#fff;z-index:101;padding:0 16px;align-items:center;justify-content:space-between}
+.hamburger{width:44px;height:44px;border:none;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:rgba(255,255,255,0.2)}
+.hamburger svg{width:26px;height:26px;display:block}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100}
 
 /* Aviso para girar o telefone */
 .rotate-hint{display:none;position:fixed;top:56px;left:0;right:0;z-index:98;background:linear-gradient(90deg,var(--pink-600),var(--pink-800));color:#fff;text-align:center;padding:8px 16px;font-size:0.78rem;font-weight:600;animation:pulseHint 3s ease-in-out infinite}
