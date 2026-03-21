@@ -195,19 +195,52 @@ textarea{resize:vertical;min-height:80px}
 .mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:var(--pink-800);color:#fff;z-index:99;padding:0 16px;align-items:center;justify-content:space-between}
 .hamburger{width:40px;height:40px;border:none;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
 .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99}
-@media(max-width:768px){
+
+/* Aviso para girar o telefone */
+.rotate-hint{display:none;position:fixed;top:56px;left:0;right:0;z-index:98;background:linear-gradient(90deg,var(--pink-600),var(--pink-800));color:#fff;text-align:center;padding:8px 16px;font-size:0.78rem;font-weight:600;animation:pulseHint 3s ease-in-out infinite}
+.rotate-hint span{margin-right:6px}
+@keyframes pulseHint{0%,100%{opacity:1}50%{opacity:0.7}}
+
+/* Mobile: qualquer tela touch ou estreita — breakpoint ampliado para 1024px */
+@media(max-width:1024px){
   .sidebar{transform:translateX(-100%)}
   .sidebar.open{transform:translateX(0)}
   .sidebar-overlay.open{display:block}
   .mobile-header{display:flex}
   .main{margin-left:0;padding:72px 16px 24px}
+  .modal-box{width:95%;padding:20px}
+  .login-card{padding:32px 24px}
+  .page-nav{flex-wrap:wrap}
+}
+
+/* Portrait (vertical) */
+@media(max-width:1024px) and (orientation:portrait){
+  .rotate-hint{display:block}
+  .main{padding-top:100px}
   .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
   .countdown-bar{flex-direction:column;gap:16px;text-align:center;padding:20px}
   .countdown-numbers{gap:12px}
   .countdown-unit .num{font-size:1.5rem}
-  .modal-box{width:95%;padding:20px}
-  .login-card{padding:32px 24px}
-  .page-nav{flex-wrap:wrap}
+  .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-wrap table{min-width:600px}
+}
+
+/* Landscape (horizontal) — melhor layout */
+@media(max-width:1024px) and (orientation:landscape){
+  .rotate-hint{display:none}
+  .main{padding-top:72px}
+  .kpi-grid{grid-template-columns:repeat(4,1fr);gap:10px}
+  .countdown-bar{padding:16px 24px}
+  .countdown-unit .num{font-size:1.3rem}
+}
+
+/* Telas muito pequenas */
+@media(max-width:480px){
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi-card{padding:12px;gap:8px}
+  .kpi-icon{width:36px;height:36px;font-size:1.1rem}
+  .btn-sm{font-size:0.75rem;padding:6px 10px}
+  .filter-chip{font-size:0.72rem;padding:5px 10px}
 }
 </style>
 </head>
@@ -457,6 +490,7 @@ function App() {
       React.createElement('span',{style:{fontFamily:'Pacifico',fontSize:'1.1rem'}},'Festa da Maitê'),
       page!=='dashboard'?React.createElement('button',{className:'hamburger',onClick:goHome},React.createElement(Ic.Home,null)):React.createElement('div',{style:{width:40}})
     ),
+    React.createElement('div',{className:'rotate-hint'},React.createElement('span',null,'📱'),' Para melhor experiência, gire o telefone na horizontal'),
     React.createElement('div',{className:'sidebar-overlay'+(sidebarOpen?' open':''),onClick:function(){setSidebarOpen(false)}}),
     React.createElement('aside',{className:'sidebar'+(sidebarOpen?' open':'')},
       React.createElement('div',{className:'sidebar-header'},
