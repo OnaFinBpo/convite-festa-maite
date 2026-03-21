@@ -13,7 +13,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -213,11 +212,14 @@ textarea{resize:vertical;min-height:80px}
 </head>
 <body>
 <div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useCallback, useRef } = React;
+<script type="text/javascript">
+var useState = React.useState;
+var useEffect = React.useEffect;
+var useCallback = React.useCallback;
+var useRef = React.useRef;
 
 /* ===================== AUTH ===================== */
-const AUTH_USERS = [
+var AUTH_USERS = [
   { hash: '32a13ecb3e3a53da0562918d46b8bab2ea3b3fb30dede6bfd2cc5927e213dbd6', name: 'Rodrigo', fullName: 'Rodrigo Mendes Porto Nogueira', initials: 'RN', color: '#3B82F6', role: 'Pai / Coordenador Geral' },
   { hash: '5136fb2298e871640e36d77674ce254bf61078adbe5dd8b538ad429a0fa2b7fa', name: 'Vanniely', fullName: 'Vanniely Caroline G. Souza', initials: 'VS', color: '#EC4899', role: 'Mãe / Coordenadora' },
   { hash: '9c9f57efe04f8f5a65b699db1c777238d5876b44cef240654c749dd09e1790ef', name: 'Admin', fullName: 'Administrador', initials: 'AD', color: '#8B5CF6', role: 'Administrador' },
