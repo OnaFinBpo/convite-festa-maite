@@ -773,59 +773,101 @@ function GuestsPage(props) {
   });
 
   function exportWhatsApp(){
-    if(allGuests.length===0){alert('Nenhum convidado na lista');return}
-    var conf=allGuests.filter(function(g){return g.status==='confirmado'});
-    var pend=allGuests.filter(function(g){return g.status==='pendente'});
-    var totalAd=allGuests.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
-    var totalKd=allGuests.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
-    var confAd=conf.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
-    var confKd=conf.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
-    var lines=[];
-    lines.push('*FESTA DA MAITÊ — 5 ANOS* 🎀');
-    lines.push('*Minnie Rosa — 26/04/2026 — 18:30*');
-    lines.push('*Local: Doce Alegria Buffet*');
-    lines.push('');
-    lines.push('📋 *LISTA DE CONVIDADOS CONFIRMADOS*');
-    lines.push('Atualizada em: '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
-    lines.push('');
-    var num=1;
-    conf.forEach(function(g){
-      var detail=g.adults+' ad.';
-      if(g.kids>0)detail+=' + '+g.kids+' cr.';
-      lines.push(num+'. '+g.name+' ('+detail+')');
-      if(g.dietary)lines.push('   ⚠️ Restrição: '+g.dietary);
-      num++;
+    if(!sb){alert('Supabase não conectado');return}
+    setSyncMsg('Gerando lista completa...');
+    sb.from('festa_rsvps').select('*').eq('status','confirmado').order('family_group').order('guest_age',{ascending:false,nullsFirst:false}).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      var data=res.data||[];
+      if(data.length===0){setSyncMsg('Nenhum confirmado no banco');setTimeout(function(){setSyncMsg('')},3000);return}
+
+      // Agrupar por família
+      var groups={};var groupOrder=[];
+      data.forEach(function(r){
+        var key=r.family_group||r.guest_name;
+        if(!groups[key]){groups[key]=[];groupOrder.push(key)}
+        groups[key].push(r);
+      });
+
+      var adults=0;var kids=0;var under6=0;
+      data.forEach(function(r){
+        if(r.guest_age!==null&&r.guest_age<12)kids++;
+        else adults++;
+        if(r.guest_age!==null&&r.guest_age<6)under6++;
+      });
+
+      var lines=[];
+      lines.push('*FESTA DA MAITÊ — 5 ANOS* 🎀');
+      lines.push('*Minnie Rosa — 26/04/2026 — 18:30*');
+      lines.push('*Local: Doce Alegria Buffet*');
+      lines.push('*Contratante: Rodrigo M. P. Nogueira*');
+      lines.push('');
+      lines.push('📋 *LISTA DE CONVIDADOS — CONFERÊNCIA NA ENTRADA*');
+      lines.push('Atualizada em: '+new Date().toLocaleDateString('pt-BR')+' às '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}));
+      lines.push('');
+
+      var num=1;
+      groupOrder.forEach(function(key){
+        var members=groups[key];
+        if(members.length>1)lines.push('*'+key+':*');
+        members.forEach(function(m){
+          var age=m.guest_age!==null?' — '+m.guest_age+' anos':'';
+          var tag='';
+          if(m.guest_age!==null&&m.guest_age<6)tag=' 👶';
+          else if(m.guest_age!==null&&m.guest_age<12)tag=' 🧒';
+          lines.push(num+'. '+m.guest_name+age+tag);
+          num++;
+        });
+        lines.push('');
+      });
+
+      lines.push('📊 *RESUMO*');
+      lines.push('👥 Total: '+data.length+' pessoas');
+      lines.push('🧑 Adultos (12+): '+adults);
+      lines.push('🧒 Crianças (até 11): '+kids);
+      lines.push('👶 Menores de 6 (não contabilizados): '+under6);
+      lines.push('');
+      lines.push('ℹ️ _Conforme contrato: aniversariante, pais, irmãos e crianças < 6 anos não contam no pacote de 100 pessoas._');
+
+      var msg=lines.join('\n');
+      window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+      setSyncMsg('Lista gerada!');
+      setTimeout(function(){setSyncMsg('')},3000);
     });
-    lines.push('');
-    lines.push('📊 *RESUMO*');
-    lines.push('✅ Confirmados: '+conf.length+' grupos — '+(confAd+confKd)+' pessoas ('+confAd+' adultos + '+confKd+' crianças)');
-    if(pend.length>0)lines.push('⏳ Pendentes: '+pend.length+' grupos');
-    lines.push('👥 Total geral: '+(totalAd+totalKd)+' pessoas');
-    var msg=lines.join('\n');
-    window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
   }
 
   function exportCSV(){
-    if(allGuests.length===0){alert('Nenhum convidado na lista');return}
-    var csv='Nome/Família;Adultos;Crianças;Total;Status;Telefone;Restrição Alimentar;Observações\n';
-    allGuests.forEach(function(g){
-      csv+='"'+g.name+'";'+
-        (Number(g.adults)||0)+';'+
-        (Number(g.kids)||0)+';'+
-        ((Number(g.adults)||0)+(Number(g.kids)||0))+';'+
-        g.status+';'+
-        (g.phone||'')+';'+
-        '"'+(g.dietary||'')+'"'+';'+
-        '"'+(g.notes||'').replace(/\n/g,' ')+'"'+'\n';
+    if(!sb){alert('Supabase não conectado');return}
+    setSyncMsg('Gerando CSV...');
+    sb.from('festa_rsvps').select('*').order('family_group').order('guest_age',{ascending:false,nullsFirst:false}).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      var data=res.data||[];
+      if(data.length===0){setSyncMsg('Nenhum convidado no banco');setTimeout(function(){setSyncMsg('')},3000);return}
+      var csv='#;Nome Completo;Idade;Família/Grupo;Status;Adulto/Criança;Conta no Pacote\n';
+      var num=1;
+      data.forEach(function(r){
+        var tipo=(r.guest_age!==null&&r.guest_age<12)?'Criança':'Adulto';
+        var conta=(r.guest_age!==null&&r.guest_age<6)?'Não (< 6 anos)':'Sim';
+        csv+=num+';'+
+          '"'+r.guest_name+'";'+
+          (r.guest_age!==null?r.guest_age:'')+';'+
+          '"'+(r.family_group||'')+'"'+';'+
+          r.status+';'+
+          tipo+';'+
+          conta+'\n';
+        num++;
+      });
+      var adults=data.filter(function(r){return r.guest_age===null||r.guest_age>=12}).length;
+      var kids=data.filter(function(r){return r.guest_age!==null&&r.guest_age<12}).length;
+      var under6=data.filter(function(r){return r.guest_age!==null&&r.guest_age<6}).length;
+      csv+=';TOTAL: '+data.length+' pessoas;;'+adults+' adultos / '+kids+' crianças;;< 6 anos: '+under6+'\n';
+      var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+      var link=document.createElement('a');
+      link.href=URL.createObjectURL(blob);
+      link.download='lista-convidados-festa-maite-'+new Date().toISOString().split('T')[0]+'.csv';
+      link.click();
+      setSyncMsg('CSV baixado!');
+      setTimeout(function(){setSyncMsg('')},3000);
     });
-    var totalAd=allGuests.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
-    var totalKd=allGuests.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
-    csv+='"TOTAL";'+totalAd+';'+totalKd+';'+(totalAd+totalKd)+';;;;\n';
-    var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-    var link=document.createElement('a');
-    link.href=URL.createObjectURL(blob);
-    link.download='convidados-festa-maite-'+new Date().toISOString().split('T')[0]+'.csv';
-    link.click();
   }
 
   function openAdd(){setEdit(null);setForm(Object.assign({},emptyForm));setShow(true)}
