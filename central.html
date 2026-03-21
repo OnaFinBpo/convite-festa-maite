@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1">
+<title>Central de Gestão — Festa da Maitê 5 Anos</title>
+<meta name="description" content="Painel de gestão da festa de aniversário da Maitê — acesso restrito">
+<meta name="theme-color" content="#BE185D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Festa Maitê">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎀</text></svg>">
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --pink-50:#FDF2F8;--pink-100:#FCE7F3;--pink-200:#FBCFE8;--pink-300:#F9A8D4;
+  --pink-400:#F472B6;--pink-500:#EC4899;--pink-600:#DB2777;--pink-700:#BE185D;
+  --pink-800:#9D174D;--pink-900:#831843;
+  --gold:#D4A017;--gold-light:#F5E6B8;
+  --gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-300:#D1D5DB;
+  --gray-400:#9CA3AF;--gray-500:#6B7280;--gray-600:#4B5563;--gray-700:#374151;
+  --gray-800:#1F2937;--gray-900:#111827;
+  --green:#10B981;--green-light:#D1FAE5;--green-dark:#059669;
+  --blue:#3B82F6;--blue-light:#DBEAFE;
+  --red:#EF4444;--red-light:#FEE2E2;
+  --orange:#F59E0B;--orange-light:#FEF3C7;
+  --purple:#8B5CF6;--purple-light:#EDE9FE;
+  --radius:12px;--shadow:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.1),0 4px 6px -2px rgba(0,0,0,0.05);
+}
+body{font-family:'Quicksand',sans-serif;background:var(--pink-50);color:var(--gray-800);min-height:100vh}
+.app{display:flex;min-height:100vh}
+
+/* LOGIN SCREEN */
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--pink-100) 0%,var(--pink-50) 50%,#fff 100%);padding:20px;position:relative;overflow:hidden}
+.login-screen::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(236,72,153,0.08) 0%,transparent 70%)}
+.login-screen::after{content:'';position:absolute;bottom:-80px;left:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(219,39,119,0.06) 0%,transparent 70%)}
+.login-card{background:#fff;border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(157,23,77,0.1),0 4px 20px rgba(0,0,0,0.05);position:relative;z-index:1;text-align:center}
+.login-card .logo{font-size:3rem;margin-bottom:8px}
+.login-card h1{font-family:'Pacifico',cursive;font-size:1.6rem;color:var(--pink-700);margin-bottom:4px}
+.login-card .subtitle{font-size:0.82rem;color:var(--gray-500);margin-bottom:28px}
+.login-card .input-wrap{position:relative;margin-bottom:16px;text-align:left}
+.login-card .input-wrap label{display:block;font-size:0.78rem;font-weight:600;color:var(--gray-600);margin-bottom:6px}
+.login-card .input-wrap input{width:100%;padding:12px 16px;border:2px solid var(--gray-200);border-radius:12px;font-size:1rem;font-family:inherit;text-align:center;letter-spacing:2px;transition:all .2s}
+.login-card .input-wrap input:focus{outline:none;border-color:var(--pink-400);box-shadow:0 0 0 4px rgba(244,114,182,0.15)}
+.login-card .input-wrap input.error{border-color:var(--red);animation:shake .4s}
+.login-btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--pink-600),var(--pink-700));color:#fff;font-size:1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s;margin-top:8px}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(219,39,119,0.3)}
+.login-btn:active{transform:translateY(0)}
+.login-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.login-error{color:var(--red);font-size:0.82rem;font-weight:600;margin-top:12px;min-height:20px}
+.login-lock{font-size:0.72rem;color:var(--gray-400);margin-top:20px;display:flex;align-items:center;justify-content:center;gap:6px}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+
+/* SIDEBAR */
+.sidebar{width:260px;background:linear-gradient(180deg,var(--pink-800) 0%,var(--pink-900) 100%);color:#fff;padding:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s ease}
+.sidebar-header{padding:24px 20px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.1)}
+.sidebar-header h1{font-family:'Pacifico',cursive;font-size:1.4rem;color:var(--pink-200);margin-bottom:4px}
+.sidebar-header p{font-size:0.75rem;color:var(--pink-300);opacity:0.8}
+.sidebar-user{padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:10px}
+.sidebar-user .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;color:#fff;flex-shrink:0}
+.sidebar-user .user-info{flex:1;min-width:0}
+.sidebar-user .user-name{font-size:0.82rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-user .user-role{font-size:0.68rem;color:var(--pink-300)}
+.sidebar-nav{flex:1;padding:12px 10px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;cursor:pointer;transition:all .2s;font-size:0.9rem;font-weight:500;color:var(--pink-200);margin-bottom:2px}
+.nav-item:hover{background:rgba(255,255,255,0.1);color:#fff}
+.nav-item.active{background:rgba(255,255,255,0.15);color:#fff;font-weight:600}
+.nav-item svg{width:20px;height:20px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--pink-500);color:#fff;font-size:0.7rem;padding:2px 8px;border-radius:99px;font-weight:700}
+.nav-item.logout{color:var(--pink-400);margin-top:8px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px}
+.nav-item.logout:hover{background:rgba(239,68,68,0.15);color:#fff}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.1);font-size:0.7rem;color:var(--pink-400);text-align:center}
+
+/* MAIN */
+.main{margin-left:260px;flex:1;padding:24px 32px;min-height:100vh}
+.page-header{margin-bottom:24px}
+.page-header h2{font-size:1.6rem;font-weight:700;color:var(--pink-800)}
+.page-header p{font-size:0.85rem;color:var(--gray-500);margin-top:4px}
+
+/* CARDS */
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;border:1px solid var(--gray-100)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:1rem;font-weight:700;color:var(--gray-800)}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi-card{background:#fff;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--pink-500);display:flex;align-items:center;gap:16px}
+.kpi-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.kpi-info h3{font-size:1.5rem;font-weight:700;color:var(--gray-900);line-height:1}
+.kpi-info p{font-size:0.75rem;color:var(--gray-500);margin-top:4px}
+
+/* COUNTDOWN */
+.countdown-bar{background:linear-gradient(135deg,var(--pink-600),var(--pink-800));border-radius:var(--radius);padding:24px 32px;color:#fff;display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;box-shadow:var(--shadow-md)}
+.countdown-bar h3{font-family:'Pacifico',cursive;font-size:1.3rem}
+.countdown-numbers{display:flex;gap:16px}
+.countdown-unit{text-align:center}
+.countdown-unit .num{font-size:2rem;font-weight:700;line-height:1}
+.countdown-unit .label{font-size:0.65rem;text-transform:uppercase;opacity:0.8;letter-spacing:1px}
+
+/* PROGRESS BAR */
+.progress-bar{height:8px;background:var(--gray-200);border-radius:99px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:99px;transition:width .5s ease}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:0.85rem}
+th{text-align:left;padding:10px 12px;background:var(--gray-50);font-weight:600;color:var(--gray-600);border-bottom:2px solid var(--gray-200);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px}
+td{padding:10px 12px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+tr:hover td{background:var(--pink-50)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:0.72rem;font-weight:600;gap:4px}
+.badge-green{background:var(--green-light);color:var(--green-dark)}
+.badge-blue{background:var(--blue-light);color:#1D4ED8}
+.badge-orange{background:var(--orange-light);color:#B45309}
+.badge-red{background:var(--red-light);color:#DC2626}
+.badge-purple{background:var(--purple-light);color:#6D28D9}
+.badge-gray{background:var(--gray-100);color:var(--gray-600)}
+.badge-pink{background:var(--pink-100);color:var(--pink-700)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:inherit}
+.btn-primary{background:var(--pink-600);color:#fff}.btn-primary:hover{background:var(--pink-700)}
+.btn-secondary{background:var(--gray-100);color:var(--gray-700)}.btn-secondary:hover{background:var(--gray-200)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:var(--green-dark)}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#DC2626}
+.btn-sm{padding:5px 12px;font-size:0.78rem}
+.btn-icon{width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:8px}
+
+/* FORMS */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:0.8rem;font-weight:600;color:var(--gray-600);margin-bottom:4px}
+input[type="text"],input[type="number"],input[type="date"],input[type="tel"],input[type="email"],
+select,textarea{width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.85rem;font-family:inherit;background:#fff;color:var(--gray-800);transition:border-color .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--pink-400);box-shadow:0 0 0 3px rgba(244,114,182,0.15)}
+textarea{resize:vertical;min-height:80px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadeIn .2s}
+.modal{background:#fff;border-radius:16px;padding:24px;width:90%;max-width:520px;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:slideUp .3s}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-header h3{font-size:1.1rem;font-weight:700;color:var(--pink-800)}
+.modal-close{width:32px;height:32px;border:none;background:var(--gray-100);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:var(--gray-500)}
+.modal-close:hover{background:var(--gray-200)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:2px;background:var(--pink-200)}
+.timeline-item{position:relative;margin-bottom:20px;padding-left:12px}
+.timeline-dot{position:absolute;left:-22px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--pink-400);background:#fff}
+.timeline-dot.done{background:var(--green);border-color:var(--green)}
+.timeline-dot.active{background:var(--pink-500);border-color:var(--pink-500);box-shadow:0 0 0 4px rgba(236,72,153,0.2)}
+.timeline-date{font-size:0.72rem;color:var(--gray-400);font-weight:600;margin-bottom:2px}
+.timeline-title{font-size:0.9rem;font-weight:600;color:var(--gray-800)}
+.timeline-desc{font-size:0.8rem;color:var(--gray-500);margin-top:2px}
+
+/* NOTES */
+.note-card{background:var(--gold-light);border-radius:var(--radius);padding:16px;margin-bottom:12px;border-left:4px solid var(--gold);position:relative}
+.note-card h4{font-size:0.9rem;font-weight:700;color:var(--gray-800);margin-bottom:6px}
+.note-card p{font-size:0.82rem;color:var(--gray-600);line-height:1.5;white-space:pre-wrap}
+.note-card .note-meta{font-size:0.7rem;color:var(--gray-400);margin-top:8px}
+
+/* CHECKLIST */
+.check-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+.check-item:last-child{border-bottom:none}
+.check-box{width:20px;height:20px;border:2px solid var(--gray-300);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.check-box.checked{background:var(--green);border-color:var(--green);color:#fff}
+.check-text{flex:1}
+.check-text.done{text-decoration:line-through;opacity:0.5}
+.check-text .title{font-size:0.88rem;font-weight:600}
+.check-text .sub{font-size:0.75rem;color:var(--gray-500)}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* MOBILE */
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:var(--pink-800);color:#fff;z-index:99;padding:0 16px;align-items:center;justify-content:space-between}
+.hamburger{width:40px;height:40px;border:none;background:transparent;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem}
+.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99}
+
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-overlay.open{display:block}
+  .mobile-header{display:flex}
+  .main{margin-left:0;padding:72px 16px 24px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .countdown-bar{flex-direction:column;gap:16px;text-align:center;padding:20px}
+  .countdown-numbers{gap:12px}
+  .countdown-unit .num{font-size:1.5rem}
+  .modal{width:95%;padding:20px}
+  .login-card{padding:32px 24px}
+}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--gray-400)}
+.empty-state p{font-size:0.9rem}
+
+.avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#fff;flex-shrink:0}
+
+.search-box{position:relative;margin-bottom:16px}
+.search-box input{padding-left:36px}
+.search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:18px;height:18px;color:var(--gray-400)}
+
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.filter-chip{padding:5px 14px;border-radius:99px;font-size:0.78rem;font-weight:600;cursor:pointer;border:1.5px solid var(--gray-200);background:#fff;color:var(--gray-600);transition:all .2s}
+.filter-chip:hover{border-color:var(--pink-300)}
+.filter-chip.active{background:var(--pink-600);color:#fff;border-color:var(--pink-600)}
+
+.money{font-weight:700;font-variant-numeric:tabular-nums}
+.money.positive{color:var(--green-dark)}
+.money.negative{color:var(--red)}
+
+/* PWA Install Banner */
+.pwa-banner{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#fff;border-radius:16px;padding:16px 24px;box-shadow:0 8px 30px rgba(0,0,0,0.15);display:flex;align-items:center;gap:16px;z-index:300;max-width:90%;animation:slideUp .4s}
+.pwa-banner button{flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ============================================================
+// AUTH — CPF-based with SHA-256 hashing
+// ============================================================
+const AUTHORIZED_USERS = [
+  { hash: '32a13ecb3e3a53da0562918d46b8bab2ea3b3fb30dede6bfd2cc5927e213dbd6', name: 'Rodrigo', fullName: 'Rodrigo Mendes Porto Nogueira', initials: 'RN', color: '#3B82F6', role: 'Pai / Coordenador Geral' },
+  { hash: '5136fb2298e871640e36d77674ce254bf61078adbe5dd8b538ad429a0fa2b7fa', name: 'Vanniely', fullName: 'Vanniely Caroline G. Souza', initials: 'VS', color: '#EC4899', role: 'Mãe / Coordenadora' },
+  { hash: '9c9f57efe04f8f5a65b699db1c777238d5876b44cef240654c749dd09e1790ef', name: 'Admin', fullName: 'Administrador', initials: 'AD', color: '#8B5CF6', role: 'Administrador' },
+];
+
+async function hashCPF(cpf) {
+  const digits = cpf.replace(/\D/g, '');
+  const encoder = new TextEncoder();
+  const data = encoder.encode(digits);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function formatCPF(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return digits.slice(0,3) + '.' + digits.slice(3);
+  if (digits.length <= 9) return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6);
+  return digits.slice(0,3) + '.' + digits.slice(3,6) + '.' + digits.slice(6,9) + '-' + digits.slice(9);
+}
+
+function getStoredSession() {
+  try {
+    const raw = window.sessionStorage.getItem('festa_maite_auth');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return null;
+}
+
+function setStoredSession(user) {
+  try { window.sessionStorage.setItem('festa_maite_auth', JSON.stringify(user)); } catch(e) {}
+}
+
+function clearStoredSession() {
+  try { window.sessionStorage.removeItem('festa_maite_auth'); } catch(e) {}
+}
+
+// ============================================================
+// DATA STORE (localStorage-backed)
+// ============================================================
+const STORAGE_KEY = 'festa_maite_central_v2';
+const PARTY_DATE = new Date('2026-04-26T18:30:00-03:00');
+
+function loadData() {
+  try { const raw = window.localStorage.getItem(STORAGE_KEY); if (raw) return JSON.parse(raw); } catch(e) {}
+  return null;
+}
+function saveData(data) {
+  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+const DEFAULT_TASKS = [
+  { id: 't1', title: 'Fechar contrato com buffet', category: 'Buffet', assignee: 'Rodrigo', dueDate: '2026-03-22', status: 'done', priority: 'high' },
+  { id: 't2', title: 'Definir cardápio (adulto + infantil)', category: 'Buffet', assignee: 'Vanniely', dueDate: '2026-03-25', status: 'done', priority: 'high' },
+  { id: 't3', title: 'Encomendar bolo temático Minnie Rosa', category: 'Bolo/Doces', assignee: 'Vanniely', dueDate: '2026-04-01', status: 'in_progress', priority: 'high' },
+  { id: 't4', title: 'Contratar decoração temática', category: 'Decoração', assignee: 'Rodrigo', dueDate: '2026-03-28', status: 'done', priority: 'high' },
+  { id: 't5', title: 'Enviar convites digitais via WhatsApp', category: 'Convites', assignee: 'Rodrigo', dueDate: '2026-03-28', status: 'in_progress', priority: 'high' },
+  { id: 't6', title: 'Confirmar DJ / som ambiente', category: 'Entretenimento', assignee: 'Rodrigo', dueDate: '2026-04-05', status: 'pending', priority: 'medium' },
+  { id: 't7', title: 'Contratar fotógrafo/a', category: 'Foto/Vídeo', assignee: 'Rodrigo', dueDate: '2026-04-01', status: 'pending', priority: 'high' },
+  { id: 't8', title: 'Definir lembrancinhas', category: 'Lembrancinhas', assignee: 'Vanniely', dueDate: '2026-04-10', status: 'pending', priority: 'medium' },
+  { id: 't9', title: 'Comprar roupa da Maitê (vestido Minnie)', category: 'Vestuário', assignee: 'Vanniely', dueDate: '2026-04-15', status: 'pending', priority: 'medium' },
+  { id: 't10', title: 'Montar playlist da festa', category: 'Entretenimento', assignee: 'Rodrigo', dueDate: '2026-04-20', status: 'pending', priority: 'low' },
+  { id: 't11', title: 'Testar convite digital (link, música, RSVP)', category: 'Convites', assignee: 'Rodrigo', dueDate: '2026-03-25', status: 'done', priority: 'high' },
+  { id: 't12', title: 'Contratar recreação infantil', category: 'Entretenimento', assignee: 'Vanniely', dueDate: '2026-04-08', status: 'pending', priority: 'high' },
+  { id: 't13', title: 'Definir mesa de doces e salgados', category: 'Bolo/Doces', assignee: 'Vanniely', dueDate: '2026-04-12', status: 'pending', priority: 'medium' },
+  { id: 't14', title: 'Comprar balões e itens de decoração extra', category: 'Decoração', assignee: 'Vanniely', dueDate: '2026-04-18', status: 'pending', priority: 'low' },
+  { id: 't15', title: 'Confirmar lista final de convidados', category: 'Convidados', assignee: 'Rodrigo', dueDate: '2026-04-20', status: 'pending', priority: 'high' },
+  { id: 't16', title: 'Reunião final com buffet (ajuste de qtd)', category: 'Buffet', assignee: 'Rodrigo', dueDate: '2026-04-22', status: 'pending', priority: 'high' },
+  { id: 't17', title: 'Preparar roteiro do dia (cronograma hora a hora)', category: 'Logística', assignee: 'Rodrigo', dueDate: '2026-04-24', status: 'pending', priority: 'high' },
+  { id: 't18', title: 'Check final — dia anterior à festa', category: 'Logística', assignee: 'Rodrigo', dueDate: '2026-04-25', status: 'pending', priority: 'high' },
+];
+
+const DEFAULT_VENDORS = [
+  { id: 'v1', name: 'Doce Alegria Buffet', category: 'Buffet', contact: '', phone: '', value: 0, paid: 0, status: 'contratado', notes: 'Local da festa — Av. São Félix 830' },
+  { id: 'v2', name: '', category: 'Decoração', contact: '', phone: '', value: 0, paid: 0, status: 'pendente', notes: 'Tema Minnie Rosa' },
+  { id: 'v3', name: '', category: 'Bolo/Doces', contact: '', phone: '', value: 0, paid: 0, status: 'pendente', notes: '' },
+  { id: 'v4', name: '', category: 'Foto/Vídeo', contact: '', phone: '', value: 0, paid: 0, status: 'pendente', notes: '' },
+  { id: 'v5', name: '', category: 'Entretenimento', contact: '', phone: '', value: 0, paid: 0, status: 'pendente', notes: 'DJ + Recreação' },
+  { id: 'v6', name: '', category: 'Lembrancinhas', contact: '', phone: '', value: 0, paid: 0, status: 'pendente', notes: '' },
+];
+
+const DEFAULT_GUESTS = [];
+
+const DEFAULT_NOTES = [
+  { id: 'n1', title: 'Link do Convite Digital', content: 'https://convite-festa-maite.vercel.app/\n\nCódigo secreto do RSVP: MAITE5\nWhatsApp confirmação: (21) 99356-9444', category: 'Links', createdAt: '2026-03-21', pinned: true },
+  { id: 'n2', title: 'Roteiro do Dia da Festa', content: '17:30 — Chegada da família para conferir decoração\n18:00 — Equipe de foto/vídeo posicionada\n18:30 — Abertura para convidados\n19:30 — Parabéns + bolo\n20:00 — Jantar livre\n20:30 — Recreação infantil\n21:30 — Doces + lembrancinhas\n22:00 — Início do encerramento\n22:30 — Fim do evento', category: 'Logística', createdAt: '2026-03-21', pinned: true },
+  { id: 'n3', title: 'Orientações para Fornecedores', content: 'Entregar tudo no local até 16:00 do dia 26/04\nEstacionamento na lateral do buffet\nContato no local: Rodrigo (21) 99356-9444\nTema: Minnie Rosa — cores: rosa, branco, dourado, preto (bolinhas)', category: 'Fornecedores', createdAt: '2026-03-21', pinned: false },
+];
+
+const DEFAULT_TIMELINE = [
+  { id: 'tl1', date: '2026-03-15', title: 'Concepção da Festa', description: 'Definição do tema, local e data', status: 'done' },
+  { id: 'tl2', date: '2026-03-20', title: 'Contratação do Buffet', description: 'Fechar contrato com Doce Alegria Buffet', status: 'done' },
+  { id: 'tl3', date: '2026-03-21', title: 'Convite Digital Pronto', description: 'Convite HTML com música, RSVP e código secreto', status: 'done' },
+  { id: 'tl4', date: '2026-03-28', title: 'Envio dos Convites', description: 'Disparar convites via WhatsApp para todos', status: 'active' },
+  { id: 'tl5', date: '2026-04-05', title: 'Fornecedores Fechados', description: 'Todos os fornecedores contratados e confirmados', status: 'pending' },
+  { id: 'tl6', date: '2026-04-15', title: 'Preparativos Finais', description: 'Lembrancinhas prontas, roupa da Maitê, playlist', status: 'pending' },
+  { id: 'tl7', date: '2026-04-22', title: 'Confirmação Final', description: 'Lista final de convidados + ajuste de quantidade no buffet', status: 'pending' },
+  { id: 'tl8', date: '2026-04-25', title: 'Check Pré-Festa', description: 'Conferir tudo: decoração, bolo, música, cronograma', status: 'pending' },
+  { id: 'tl9', date: '2026-04-26', title: 'DIA DA FESTA!', description: '18:30 às 22:30 — Doce Alegria Buffet', status: 'pending' },
+];
+
+function getDefaultData() {
+  return { tasks: DEFAULT_TASKS, vendors: DEFAULT_VENDORS, guests: DEFAULT_GUESTS, notes: DEFAULT_NOTES, timeline: DEFAULT_TIMELINE };
+}
+
+// ============================================================
+// ICONS
+// ============================================================
+const I = {
+  Dashboard: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  Timeline: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  Tasks: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>,
+  Budget: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>,
+  Guests: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>,
+  Notes: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+  Plus: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  Search: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  Edit: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  Check: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+  Menu: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  Pin: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z"/></svg>,
+  Whatsapp: () => <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>,
+  Logout: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+  Lock: () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>,
+};
+
+// ============================================================
+// UTILITY
+// ============================================================
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function fmtDate(d) { if (!d) return '—'; const p = d.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function fmtMoney(v) { return 'R$ ' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ============================================================
+// LOGIN SCREEN
+// ============================================================
+function LoginScreen({ onLogin }) {
+  const [cpf, setCpf] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const inputRef = useRef(null);
+
+  useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, []);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const digits = cpf.replace(/\D/g, '');
+    if (digits.length !== 11) { setError('CPF deve ter 11 dígitos'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const hash = await hashCPF(digits);
+      const user = AUTHORIZED_USERS.find(u => u.hash === hash);
+      if (user) {
+        setStoredSession(user);
+        onLogin(user);
+      } else {
+        setError('CPF não autorizado');
+        if (inputRef.current) inputRef.current.classList.add('error');
+        setTimeout(() => { if (inputRef.current) inputRef.current.classList.remove('error'); }, 400);
+      }
+    } catch(err) {
+      setError('Erro ao verificar. Tente novamente.');
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div className="login-screen">
+      <div className="login-card">
+        <div className="logo">🎀</div>
+        <h1>Festa da Maitê</h1>
+        <p className="subtitle">Central de Gestão — Acesso Restrito</p>
+        <form onSubmit={handleSubmit}>
+          <div className="input-wrap">
+            <label>Digite seu CPF para acessar</label>
+            <input
+              ref={inputRef}
+              type="text"
+              inputMode="numeric"
+              placeholder="000.000.000-00"
+              value={cpf}
+              onChange={e => { setCpf(formatCPF(e.target.value)); setError(''); }}
+              maxLength={14}
+              autoComplete="off"
+            />
+          </div>
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? 'Verificando...' : 'Entrar'}
+          </button>
+        </form>
+        <div className="login-error">{error}</div>
+        <div className="login-lock">
+          <span style={{width:14,height:14,display:'inline-flex'}}><I.Lock /></span>
+          Acesso exclusivo para organizadores
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// MAIN APP
+// ============================================================
+function App() {
+  const [user, setUser] = useState(() => getStoredSession());
+  const [page, setPage] = useState('dashboard');
+  const [data, setData] = useState(() => loadData() || getDefaultData());
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [countdown, setCountdown] = useState({d:0,h:0,m:0,s:0});
+
+  useEffect(() => { saveData(data); }, [data]);
+
+  useEffect(() => {
+    function tick() {
+      const now = new Date();
+      const diff = PARTY_DATE - now;
+      if (diff <= 0) { setCountdown({d:0,h:0,m:0,s:0}); return; }
+      setCountdown({
+        d: Math.floor(diff/86400000),
+        h: Math.floor((diff%86400000)/3600000),
+        m: Math.floor((diff%3600000)/60000),
+        s: Math.floor((diff%60000)/1000),
+      });
+    }
+    tick(); const id = setInterval(tick, 1000); return () => clearInterval(id);
+  }, []);
+
+  const update = useCallback((key, val) => {
+    setData(prev => ({ ...prev, [key]: typeof val === 'function' ? val(prev[key]) : val }));
+  }, []);
+
+  function handleLogout() {
+    clearStoredSession();
+    setUser(null);
+  }
+
+  if (!user) return <LoginScreen onLogin={setUser} />;
+
+  const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: I.Dashboard },
+    { id: 'timeline', label: 'Roadmap', icon: I.Timeline },
+    { id: 'tasks', label: 'Tarefas', icon: I.Tasks, badge: data.tasks.filter(t=>t.status==='pending').length },
+    { id: 'budget', label: 'Orçamento', icon: I.Budget },
+    { id: 'guests', label: 'Convidados', icon: I.Guests, badge: data.guests.length },
+    { id: 'notes', label: 'Notas', icon: I.Notes },
+  ];
+
+  const pages = { dashboard: DashboardPage, timeline: TimelinePage, tasks: TasksPage, budget: BudgetPage, guests: GuestsPage, notes: NotesPage };
+  const PageComponent = pages[page] || DashboardPage;
+
+  return (
+    <div className="app">
+      <div className="mobile-header">
+        <button className="hamburger" onClick={() => setSidebarOpen(true)}><I.Menu /></button>
+        <span style={{fontFamily:'Pacifico',fontSize:'1.1rem'}}>Festa da Maitê</span>
+        <div style={{width:40}} />
+      </div>
+      <div className={`sidebar-overlay ${sidebarOpen?'open':''}`} onClick={() => setSidebarOpen(false)} />
+      <aside className={`sidebar ${sidebarOpen?'open':''}`}>
+        <div className="sidebar-header">
+          <h1>Festa da Maitê</h1>
+          <p>5 Aninhos — Minnie Rosa</p>
+        </div>
+        <div className="sidebar-user">
+          <div className="avatar" style={{background:user.color,width:34,height:34,fontSize:'0.75rem'}}>{user.initials}</div>
+          <div className="user-info">
+            <div className="user-name">{user.name}</div>
+            <div className="user-role">{user.role}</div>
+          </div>
+        </div>
+        <nav className="sidebar-nav">
+          {navItems.map(item => (
+            <div key={item.id} className={`nav-item ${page===item.id?'active':''}`} onClick={() => {setPage(item.id);setSidebarOpen(false)}}>
+              <item.icon />
+              {item.label}
+              {item.badge > 0 && <span className="nav-badge">{item.badge}</span>}
+            </div>
+          ))}
+          <div className="nav-item logout" onClick={handleLogout}>
+            <I.Logout /> Sair
+          </div>
+        </nav>
+        <div className="sidebar-footer">
+          26 de Abril de 2026 — 18:30<br/>Doce Alegria Buffet
+        </div>
+      </aside>
+      <main className="main">
+        <PageComponent data={data} update={update} countdown={countdown} setPage={setPage} user={user} />
+      </main>
+    </div>
+  );
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function DashboardPage({ data, countdown, setPage, user }) {
+  const totalTasks = data.tasks.length;
+  const doneTasks = data.tasks.filter(t => t.status === 'done').length;
+  const progressPct = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const totalGuests = data.guests.reduce((s,g) => s + (g.adults||0) + (g.kids||0), 0);
+  const confirmedGuests = data.guests.filter(g => g.status === 'confirmado').reduce((s,g) => s + (g.adults||0) + (g.kids||0), 0);
+  const totalBudget = data.vendors.reduce((s,v) => s + Number(v.value||0), 0);
+  const pendingPayment = totalBudget - data.vendors.reduce((s,v) => s + Number(v.paid||0), 0);
+
+  return (
+    <div>
+      <div className="page-header">
+        <h2>Olá, {user.name}!</h2>
+        <p>Visão geral da organização da festa</p>
+      </div>
+      <div className="countdown-bar">
+        <div><h3>Contagem Regressiva</h3><p style={{fontSize:'0.8rem',opacity:0.8,marginTop:4}}>26/04/2026 — 18:30</p></div>
+        <div className="countdown-numbers">
+          <div className="countdown-unit"><div className="num">{countdown.d}</div><div className="label">dias</div></div>
+          <div className="countdown-unit"><div className="num">{countdown.h}</div><div className="label">horas</div></div>
+          <div className="countdown-unit"><div className="num">{countdown.m}</div><div className="label">min</div></div>
+          <div className="countdown-unit"><div className="num">{countdown.s}</div><div className="label">seg</div></div>
+        </div>
+      </div>
+      <div className="kpi-grid">
+        <div className="kpi-card" style={{borderLeftColor:'var(--pink-500)',cursor:'pointer'}} onClick={()=>setPage('tasks')}>
+          <div className="kpi-icon" style={{background:'var(--pink-100)',color:'var(--pink-600)'}}>✓</div>
+          <div className="kpi-info">
+            <h3>{doneTasks}/{totalTasks}</h3><p>Tarefas concluídas</p>
+            <div className="progress-bar" style={{width:120,marginTop:4}}><div className="progress-fill" style={{width:progressPct+'%',background:'var(--pink-500)'}} /></div>
+          </div>
+        </div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--blue)',cursor:'pointer'}} onClick={()=>setPage('guests')}>
+          <div className="kpi-icon" style={{background:'var(--blue-light)',color:'var(--blue)'}}>👥</div>
+          <div className="kpi-info"><h3>{confirmedGuests}/{totalGuests||0}</h3><p>Convidados confirmados</p></div>
+        </div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--green)',cursor:'pointer'}} onClick={()=>setPage('budget')}>
+          <div className="kpi-icon" style={{background:'var(--green-light)',color:'var(--green)'}}>$</div>
+          <div className="kpi-info"><h3>{fmtMoney(totalBudget)}</h3><p>Orçamento total</p></div>
+        </div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--orange)',cursor:'pointer'}} onClick={()=>setPage('budget')}>
+          <div className="kpi-icon" style={{background:'var(--orange-light)',color:'var(--orange)'}}>⏳</div>
+          <div className="kpi-info"><h3>{fmtMoney(pendingPayment)}</h3><p>A pagar</p></div>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-header"><span className="card-title">Progresso Geral — {progressPct}%</span></div>
+        <div className="progress-bar" style={{height:12}}><div className="progress-fill" style={{width:progressPct+'%',background:'linear-gradient(90deg,var(--pink-400),var(--pink-600))'}} /></div>
+        <div style={{display:'flex',justifyContent:'space-between',marginTop:12,fontSize:'0.78rem',color:'var(--gray-500)'}}>
+          <span>✅ {doneTasks} concluídas</span>
+          <span>🔄 {data.tasks.filter(t=>t.status==='in_progress').length} em andamento</span>
+          <span>⏳ {data.tasks.filter(t=>t.status==='pending').length} pendentes</span>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-header"><span className="card-title">Próximas Tarefas</span><button className="btn btn-sm btn-secondary" onClick={()=>setPage('tasks')}>Ver todas</button></div>
+        {data.tasks.filter(t => t.status !== 'done').sort((a,b) => (a.dueDate||'').localeCompare(b.dueDate||'')).slice(0,5).map(task => (
+          <div key={task.id} className="check-item">
+            <div style={{width:8,height:8,borderRadius:99,background:task.priority==='high'?'var(--red)':task.priority==='medium'?'var(--orange)':'var(--gray-300)',flexShrink:0}} />
+            <div className="check-text"><div className="title">{task.title}</div><div className="sub">{fmtDate(task.dueDate)} — {task.category} — {task.assignee}</div></div>
+            <span className={`badge ${task.status==='in_progress'?'badge-blue':'badge-orange'}`}>{task.status==='in_progress'?'Em andamento':'Pendente'}</span>
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        <div className="card-header"><span className="card-title">Links Rápidos</span></div>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+          <a href="/" target="_blank" className="btn btn-primary" style={{textDecoration:'none'}}>🎀 Ver Convite</a>
+          <a href="https://maps.app.goo.gl/6gwa9Kq8VdLdZbSQ6" target="_blank" className="btn btn-secondary" style={{textDecoration:'none'}}>📍 Mapa do Local</a>
+          <a href="https://wa.me/5521993569444" target="_blank" className="btn btn-success" style={{textDecoration:'none',display:'flex',alignItems:'center',gap:6}}>
+            <span style={{width:16,height:16,display:'inline-flex'}}><I.Whatsapp /></span> WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// TIMELINE / ROADMAP
+// ============================================================
+function TimelinePage({ data, update }) {
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({date:'',title:'',description:'',status:'pending'});
+
+  function openAdd() { setEditItem(null); setForm({date:'',title:'',description:'',status:'pending'}); setShowModal(true); }
+  function openEdit(item) { setEditItem(item); setForm({...item}); setShowModal(true); }
+  function save() {
+    if (!form.title) return;
+    if (editItem) { update('timeline', prev => prev.map(t => t.id===editItem.id ? {...t,...form} : t)); }
+    else { update('timeline', prev => [...prev, { id: uid(), ...form }]); }
+    setShowModal(false);
+  }
+  function remove(id) { update('timeline', prev => prev.filter(t=>t.id!==id)); }
+  const sorted = [...data.timeline].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div><h2>Roadmap</h2><p>Cronograma geral até o dia da festa</p></div>
+        <button className="btn btn-primary" onClick={openAdd}><I.Plus /> Adicionar</button>
+      </div>
+      <div className="card">
+        <div className="timeline">
+          {sorted.map(item => (
+            <div key={item.id} className="timeline-item" style={{cursor:'pointer'}} onClick={()=>openEdit(item)}>
+              <div className={`timeline-dot ${item.status}`} />
+              <div className="timeline-date">{fmtDate(item.date)}</div>
+              <div className="timeline-title">{item.title}</div>
+              {item.description && <div className="timeline-desc">{item.description}</div>}
+              <span className={`badge ${item.status==='done'?'badge-green':item.status==='active'?'badge-pink':'badge-gray'}`} style={{marginTop:4}}>
+                {item.status==='done'?'Concluído':item.status==='active'?'Em andamento':'Pendente'}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {showModal && <Modal title={editItem?'Editar Marco':'Novo Marco'} onClose={()=>setShowModal(false)}>
+        <div className="form-group"><label className="form-label">Data</label><input type="date" value={form.date} onChange={e=>setForm({...form,date:e.target.value})} /></div>
+        <div className="form-group"><label className="form-label">Título</label><input type="text" value={form.title} onChange={e=>setForm({...form,title:e.target.value})} /></div>
+        <div className="form-group"><label className="form-label">Descrição</label><textarea value={form.description} onChange={e=>setForm({...form,description:e.target.value})} /></div>
+        <div className="form-group"><label className="form-label">Status</label>
+          <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="pending">Pendente</option><option value="active">Em andamento</option><option value="done">Concluído</option></select>
+        </div>
+        <div className="modal-actions">
+          {editItem && <button className="btn btn-danger btn-sm" onClick={()=>{remove(editItem.id);setShowModal(false)}}>Excluir</button>}
+          <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Salvar</button>
+        </div>
+      </Modal>}
+    </div>
+  );
+}
+
+// ============================================================
+// TASKS
+// ============================================================
+function TasksPage({ data, update, user }) {
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({title:'',category:'',assignee:user.name,dueDate:'',status:'pending',priority:'medium'});
+
+  const categories = [...new Set(data.tasks.map(t=>t.category))].sort();
+  const filtered = data.tasks.filter(t => {
+    if (filter==='done' && t.status!=='done') return false;
+    if (filter==='in_progress' && t.status!=='in_progress') return false;
+    if (filter==='pending' && t.status!=='pending') return false;
+    if (filter==='mine' && t.assignee!==user.name) return false;
+    if (search && !t.title.toLowerCase().includes(search.toLowerCase()) && !t.category.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  }).sort((a,b) => {
+    const p = {high:0,medium:1,low:2};
+    if (a.status==='done' && b.status!=='done') return 1;
+    if (a.status!=='done' && b.status==='done') return -1;
+    return (p[a.priority]||1) - (p[b.priority]||1) || (a.dueDate||'').localeCompare(b.dueDate||'');
+  });
+
+  function openAdd() { setEditItem(null); setForm({title:'',category:'',assignee:user.name,dueDate:'',status:'pending',priority:'medium'}); setShowModal(true); }
+  function openEdit(item) { setEditItem(item); setForm({...item}); setShowModal(true); }
+  function save() {
+    if (!form.title) return;
+    if (editItem) { update('tasks', prev => prev.map(t => t.id===editItem.id ? {...t,...form} : t)); }
+    else { update('tasks', prev => [...prev, { id: uid(), ...form }]); }
+    setShowModal(false);
+  }
+  function toggleDone(id) { update('tasks', prev => prev.map(t => t.id===id ? {...t, status: t.status==='done'?'pending':'done'} : t)); }
+  function remove(id) { update('tasks', prev => prev.filter(t=>t.id!==id)); }
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div><h2>Tarefas</h2><p>Checklist completo de tudo que precisa ser feito</p></div>
+        <button className="btn btn-primary" onClick={openAdd}><I.Plus /> Nova Tarefa</button>
+      </div>
+      <div className="search-box"><I.Search /><input type="text" placeholder="Buscar tarefa..." value={search} onChange={e=>setSearch(e.target.value)} /></div>
+      <div className="filter-row">
+        {[['all','Todas'],['mine','Minhas'],['pending','Pendentes'],['in_progress','Em andamento'],['done','Concluídas']].map(([k,l])=>(
+          <div key={k} className={`filter-chip ${filter===k?'active':''}`} onClick={()=>setFilter(k)}>
+            {l} ({k==='mine'?data.tasks.filter(t=>t.assignee===user.name).length:data.tasks.filter(t=>k==='all'||t.status===k).length})
+          </div>
+        ))}
+      </div>
+      <div className="card">
+        {filtered.length === 0 && <div className="empty-state"><p>Nenhuma tarefa encontrada</p></div>}
+        {filtered.map(task => (
+          <div key={task.id} className="check-item">
+            <div className={`check-box ${task.status==='done'?'checked':''}`} onClick={()=>toggleDone(task.id)}>
+              {task.status==='done' && <I.Check />}
+            </div>
+            <div className={`check-text ${task.status==='done'?'done':''}`} style={{cursor:'pointer'}} onClick={()=>openEdit(task)}>
+              <div className="title">{task.title}</div>
+              <div className="sub">{fmtDate(task.dueDate)} — {task.category} — {task.assignee}</div>
+            </div>
+            <span className={`badge ${task.priority==='high'?'badge-red':task.priority==='medium'?'badge-orange':'badge-gray'}`}>
+              {task.priority==='high'?'Alta':task.priority==='medium'?'Média':'Baixa'}
+            </span>
+          </div>
+        ))}
+      </div>
+      {showModal && <Modal title={editItem?'Editar Tarefa':'Nova Tarefa'} onClose={()=>setShowModal(false)}>
+        <div className="form-group"><label className="form-label">Título</label><input type="text" value={form.title} onChange={e=>setForm({...form,title:e.target.value})} /></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Categoria</label>
+            <input type="text" list="cats" value={form.category} onChange={e=>setForm({...form,category:e.target.value})} />
+            <datalist id="cats">{categories.map(c=><option key={c} value={c}/>)}</datalist>
+          </div>
+          <div className="form-group"><label className="form-label">Prazo</label><input type="date" value={form.dueDate} onChange={e=>setForm({...form,dueDate:e.target.value})} /></div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Responsável</label>
+            <select value={form.assignee} onChange={e=>setForm({...form,assignee:e.target.value})}>
+              {AUTHORIZED_USERS.filter(u=>u.name!=='Admin').map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Prioridade</label>
+            <select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})}>
+              <option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option>
+            </select>
+          </div>
+        </div>
+        <div className="form-group"><label className="form-label">Status</label>
+          <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>
+            <option value="pending">Pendente</option><option value="in_progress">Em andamento</option><option value="done">Concluído</option>
+          </select>
+        </div>
+        <div className="modal-actions">
+          {editItem && <button className="btn btn-danger btn-sm" onClick={()=>{remove(editItem.id);setShowModal(false)}}>Excluir</button>}
+          <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Salvar</button>
+        </div>
+      </Modal>}
+    </div>
+  );
+}
+
+// ============================================================
+// BUDGET / VENDORS
+// ============================================================
+function BudgetPage({ data, update }) {
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({name:'',category:'',contact:'',phone:'',value:0,paid:0,status:'pendente',notes:''});
+
+  const totalBudget = data.vendors.reduce((s,v) => s + Number(v.value||0), 0);
+  const totalPaid = data.vendors.reduce((s,v) => s + Number(v.paid||0), 0);
+
+  function openAdd() { setEditItem(null); setForm({name:'',category:'',contact:'',phone:'',value:0,paid:0,status:'pendente',notes:''}); setShowModal(true); }
+  function openEdit(item) { setEditItem(item); setForm({...item}); setShowModal(true); }
+  function save() {
+    if (editItem) { update('vendors', prev => prev.map(v => v.id===editItem.id ? {...v,...form,value:Number(form.value),paid:Number(form.paid)} : v)); }
+    else { update('vendors', prev => [...prev, { id: uid(), ...form, value:Number(form.value), paid:Number(form.paid) }]); }
+    setShowModal(false);
+  }
+  function remove(id) { update('vendors', prev => prev.filter(v=>v.id!==id)); }
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div><h2>Orçamento & Fornecedores</h2><p>Controle financeiro e fornecedores</p></div>
+        <button className="btn btn-primary" onClick={openAdd}><I.Plus /> Novo Fornecedor</button>
+      </div>
+      <div className="kpi-grid" style={{gridTemplateColumns:'repeat(3,1fr)'}}>
+        <div className="kpi-card" style={{borderLeftColor:'var(--blue)'}}><div className="kpi-info"><h3 className="money">{fmtMoney(totalBudget)}</h3><p>Orçamento Total</p></div></div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--green)'}}><div className="kpi-info"><h3 className="money positive">{fmtMoney(totalPaid)}</h3><p>Total Pago</p></div></div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--red)'}}><div className="kpi-info"><h3 className="money negative">{fmtMoney(totalBudget-totalPaid)}</h3><p>A Pagar</p></div></div>
+      </div>
+      {totalBudget > 0 && <div className="card" style={{marginBottom:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',marginBottom:8,fontSize:'0.8rem',fontWeight:600}}>
+          <span>Pago: {Math.round((totalPaid/totalBudget)*100)}%</span><span>{fmtMoney(totalPaid)} / {fmtMoney(totalBudget)}</span>
+        </div>
+        <div className="progress-bar" style={{height:10}}><div className="progress-fill" style={{width:Math.round((totalPaid/totalBudget)*100)+'%',background:'linear-gradient(90deg,var(--green),#34D399)'}} /></div>
+      </div>}
+      <div className="card"><div className="table-wrap"><table>
+        <thead><tr><th>Fornecedor</th><th>Categoria</th><th>Contato</th><th>Valor</th><th>Pago</th><th>Status</th><th></th></tr></thead>
+        <tbody>{data.vendors.map(v => (
+          <tr key={v.id}>
+            <td><strong>{v.name || '(não definido)'}</strong></td>
+            <td><span className="badge badge-purple">{v.category}</span></td>
+            <td style={{fontSize:'0.8rem'}}>{v.contact}{v.phone && <><br/>{v.phone}</>}</td>
+            <td className="money">{fmtMoney(v.value)}</td>
+            <td className="money positive">{fmtMoney(v.paid)}</td>
+            <td><span className={`badge ${v.status==='contratado'?'badge-green':v.status==='negociando'?'badge-orange':'badge-gray'}`}>{v.status}</span></td>
+            <td><button className="btn btn-icon btn-secondary" onClick={()=>openEdit(v)}><I.Edit /></button></td>
+          </tr>
+        ))}</tbody>
+      </table></div></div>
+      {showModal && <Modal title={editItem?'Editar Fornecedor':'Novo Fornecedor'} onClose={()=>setShowModal(false)}>
+        <div className="form-group"><label className="form-label">Nome</label><input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} /></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Categoria</label>
+            <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>
+              <option value="">Selecione</option>{['Buffet','Decoração','Bolo/Doces','Foto/Vídeo','Entretenimento','Lembrancinhas','Vestuário','Outros'].map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="form-group"><label className="form-label">Status</label>
+            <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>
+              <option value="pendente">Pendente</option><option value="negociando">Negociando</option><option value="contratado">Contratado</option><option value="pago">Pago</option>
+            </select>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Contato</label><input type="text" value={form.contact} onChange={e=>setForm({...form,contact:e.target.value})} /></div>
+          <div className="form-group"><label className="form-label">Telefone</label><input type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} /></div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Valor (R$)</label><input type="number" step="0.01" value={form.value} onChange={e=>setForm({...form,value:e.target.value})} /></div>
+          <div className="form-group"><label className="form-label">Pago (R$)</label><input type="number" step="0.01" value={form.paid} onChange={e=>setForm({...form,paid:e.target.value})} /></div>
+        </div>
+        <div className="form-group"><label className="form-label">Observações</label><textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} /></div>
+        <div className="modal-actions">
+          {editItem && <button className="btn btn-danger btn-sm" onClick={()=>{remove(editItem.id);setShowModal(false)}}>Excluir</button>}
+          <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Salvar</button>
+        </div>
+      </Modal>}
+    </div>
+  );
+}
+
+// ============================================================
+// GUESTS
+// ============================================================
+function GuestsPage({ data, update }) {
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({name:'',adults:1,kids:0,status:'pendente',phone:'',notes:'',dietary:''});
+
+  const totalAdults = data.guests.reduce((s,g)=>s+(g.adults||0),0);
+  const totalKids = data.guests.reduce((s,g)=>s+(g.kids||0),0);
+  const confirmed = data.guests.filter(g=>g.status==='confirmado');
+  const confAdults = confirmed.reduce((s,g)=>s+(g.adults||0),0);
+  const confKids = confirmed.reduce((s,g)=>s+(g.kids||0),0);
+
+  const filtered = data.guests.filter(g => {
+    if (filter!=='all' && g.status!==filter) return false;
+    if (search && !g.name.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
+  });
+
+  function openAdd() { setEditItem(null); setForm({name:'',adults:1,kids:0,status:'pendente',phone:'',notes:'',dietary:''}); setShowModal(true); }
+  function openEdit(item) { setEditItem(item); setForm({...item}); setShowModal(true); }
+  function save() {
+    if (!form.name) return;
+    if (editItem) { update('guests', prev => prev.map(g => g.id===editItem.id ? {...g,...form,adults:Number(form.adults),kids:Number(form.kids)} : g)); }
+    else { update('guests', prev => [...prev, { id: uid(), ...form, adults:Number(form.adults), kids:Number(form.kids) }]); }
+    setShowModal(false);
+  }
+  function remove(id) { update('guests', prev => prev.filter(g=>g.id!==id)); }
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div><h2>Convidados</h2><p>Lista completa e controle de RSVP</p></div>
+        <button className="btn btn-primary" onClick={openAdd}><I.Plus /> Novo Convidado</button>
+      </div>
+      <div className="kpi-grid" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
+        <div className="kpi-card" style={{borderLeftColor:'var(--pink-500)'}}><div className="kpi-info"><h3>{data.guests.length}</h3><p>Famílias/Grupos</p></div></div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--blue)'}}><div className="kpi-info"><h3>{totalAdults+totalKids}</h3><p>Total ({totalAdults} ad. + {totalKids} cr.)</p></div></div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--green)'}}><div className="kpi-info"><h3>{confAdults+confKids}</h3><p>Confirmados ({confAdults}+{confKids})</p></div></div>
+        <div className="kpi-card" style={{borderLeftColor:'var(--orange)'}}><div className="kpi-info"><h3>{data.guests.filter(g=>g.status==='pendente').length}</h3><p>Pendentes</p></div></div>
+      </div>
+      <div className="search-box"><I.Search /><input type="text" placeholder="Buscar convidado..." value={search} onChange={e=>setSearch(e.target.value)} /></div>
+      <div className="filter-row">
+        {[['all','Todos'],['pendente','Pendentes'],['confirmado','Confirmados'],['recusado','Recusados']].map(([k,l])=>(
+          <div key={k} className={`filter-chip ${filter===k?'active':''}`} onClick={()=>setFilter(k)}>{l}</div>
+        ))}
+      </div>
+      <div className="card"><div className="table-wrap"><table>
+        <thead><tr><th>Nome / Família</th><th>Adultos</th><th>Crianças</th><th>Telefone</th><th>Restrição</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {filtered.length===0 && <tr><td colSpan="7" style={{textAlign:'center',padding:30,color:'var(--gray-400)'}}>Nenhum convidado cadastrado ainda</td></tr>}
+          {filtered.map(g => (
+          <tr key={g.id}>
+            <td><strong>{g.name}</strong>{g.notes && <div style={{fontSize:'0.72rem',color:'var(--gray-400)'}}>{g.notes}</div>}</td>
+            <td style={{textAlign:'center'}}>{g.adults}</td><td style={{textAlign:'center'}}>{g.kids}</td>
+            <td style={{fontSize:'0.8rem'}}>{g.phone}</td><td style={{fontSize:'0.8rem'}}>{g.dietary||'—'}</td>
+            <td><span className={`badge ${g.status==='confirmado'?'badge-green':g.status==='recusado'?'badge-red':'badge-orange'}`}>{g.status}</span></td>
+            <td><button className="btn btn-icon btn-secondary" onClick={()=>openEdit(g)}><I.Edit /></button></td>
+          </tr>
+        ))}</tbody>
+      </table></div></div>
+      {showModal && <Modal title={editItem?'Editar Convidado':'Novo Convidado'} onClose={()=>setShowModal(false)}>
+        <div className="form-group"><label className="form-label">Nome / Família</label><input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Ex: Família Silva" /></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Adultos</label><input type="number" min="0" value={form.adults} onChange={e=>setForm({...form,adults:e.target.value})} /></div>
+          <div className="form-group"><label className="form-label">Crianças</label><input type="number" min="0" value={form.kids} onChange={e=>setForm({...form,kids:e.target.value})} /></div>
+          <div className="form-group"><label className="form-label">Status</label>
+            <select value={form.status} onChange={e=>setForm({...form,status:e.target.value})}><option value="pendente">Pendente</option><option value="confirmado">Confirmado</option><option value="recusado">Recusado</option></select>
+          </div>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Telefone</label><input type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} /></div>
+          <div className="form-group"><label className="form-label">Restrição Alimentar</label><input type="text" value={form.dietary} onChange={e=>setForm({...form,dietary:e.target.value})} /></div>
+        </div>
+        <div className="form-group"><label className="form-label">Observações</label><textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} /></div>
+        <div className="modal-actions">
+          {editItem && <button className="btn btn-danger btn-sm" onClick={()=>{remove(editItem.id);setShowModal(false)}}>Excluir</button>}
+          <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Salvar</button>
+        </div>
+      </Modal>}
+    </div>
+  );
+}
+
+// ============================================================
+// NOTES
+// ============================================================
+function NotesPage({ data, update }) {
+  const [filter, setFilter] = useState('all');
+  const [showModal, setShowModal] = useState(false);
+  const [editItem, setEditItem] = useState(null);
+  const [form, setForm] = useState({title:'',content:'',category:'Geral',pinned:false});
+
+  const categories = ['all', ...new Set(data.notes.map(n=>n.category))];
+  const filtered = data.notes.filter(n => filter==='all'||n.category===filter).sort((a,b) => (b.pinned?1:0)-(a.pinned?1:0));
+
+  function openAdd() { setEditItem(null); setForm({title:'',content:'',category:'Geral',pinned:false}); setShowModal(true); }
+  function openEdit(item) { setEditItem(item); setForm({...item}); setShowModal(true); }
+  function save() {
+    if (!form.title) return;
+    const now = new Date().toISOString().split('T')[0];
+    if (editItem) { update('notes', prev => prev.map(n => n.id===editItem.id ? {...n,...form} : n)); }
+    else { update('notes', prev => [...prev, { id: uid(), ...form, createdAt: now }]); }
+    setShowModal(false);
+  }
+  function remove(id) { update('notes', prev => prev.filter(n=>n.id!==id)); }
+  function togglePin(id) { update('notes', prev => prev.map(n => n.id===id ? {...n,pinned:!n.pinned} : n)); }
+
+  return (
+    <div>
+      <div className="page-header" style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div><h2>Notas & Orientações</h2><p>Anotações, instruções e passo a passo</p></div>
+        <button className="btn btn-primary" onClick={openAdd}><I.Plus /> Nova Nota</button>
+      </div>
+      <div className="filter-row">
+        {categories.map(c => <div key={c} className={`filter-chip ${filter===c?'active':''}`} onClick={()=>setFilter(c)}>{c==='all'?'Todas':c}</div>)}
+      </div>
+      {filtered.length===0 && <div className="card"><div className="empty-state"><p>Nenhuma nota encontrada</p></div></div>}
+      {filtered.map(note => (
+        <div key={note.id} className="note-card" style={{borderLeftColor:note.pinned?'var(--pink-500)':'var(--gold)'}}>
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between'}}>
+            <h4>{note.pinned && <span style={{color:'var(--pink-500)',marginRight:6}}>📌</span>}{note.title}</h4>
+            <div style={{display:'flex',gap:4}}>
+              <button className="btn btn-icon btn-secondary btn-sm" onClick={()=>togglePin(note.id)} style={{width:28,height:28}}><I.Pin /></button>
+              <button className="btn btn-icon btn-secondary btn-sm" onClick={()=>openEdit(note)} style={{width:28,height:28}}><I.Edit /></button>
+            </div>
+          </div>
+          <p>{note.content}</p>
+          <div className="note-meta"><span className="badge badge-purple" style={{marginRight:8}}>{note.category}</span>{fmtDate(note.createdAt)}</div>
+        </div>
+      ))}
+      {showModal && <Modal title={editItem?'Editar Nota':'Nova Nota'} onClose={()=>setShowModal(false)}>
+        <div className="form-group"><label className="form-label">Título</label><input type="text" value={form.title} onChange={e=>setForm({...form,title:e.target.value})} /></div>
+        <div className="form-group"><label className="form-label">Conteúdo</label><textarea rows="8" value={form.content} onChange={e=>setForm({...form,content:e.target.value})} /></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <div className="form-group"><label className="form-label">Categoria</label>
+            <select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>
+              {['Geral','Links','Logística','Fornecedores','Decoração','Ideias','Orientações'].map(c=><option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className="form-group" style={{display:'flex',alignItems:'flex-end',paddingBottom:6}}>
+            <label style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',fontSize:'0.85rem',fontWeight:600,color:'var(--gray-600)'}}>
+              <input type="checkbox" checked={form.pinned} onChange={e=>setForm({...form,pinned:e.target.checked})} style={{width:18,height:18}} /> Fixar no topo
+            </label>
+          </div>
+        </div>
+        <div className="modal-actions">
+          {editItem && <button className="btn btn-danger btn-sm" onClick={()=>{remove(editItem.id);setShowModal(false)}}>Excluir</button>}
+          <button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Cancelar</button>
+          <button className="btn btn-primary" onClick={save}>Salvar</button>
+        </div>
+      </Modal>}
+    </div>
+  );
+}
+
+// ============================================================
+// MODAL (reusable)
+// ============================================================
+function Modal({ title, onClose, children }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>{title}</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
