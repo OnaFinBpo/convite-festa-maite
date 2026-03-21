@@ -123,6 +123,30 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 .music-btn:active{transform:scale(.85)}
 .music-btn.muted{opacity:.5;background:var(--gr)}
 
+.scroll-ind{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:800;display:none;flex-direction:column;align-items:center;gap:4px;pointer-events:none;transition:opacity .5s}
+.scroll-ind.vis{display:flex}
+.scroll-ind.fade{opacity:0}
+.scroll-arr{width:30px;height:30px;border-left:3px solid var(--wh);border-bottom:3px solid var(--wh);transform:rotate(-45deg);animation:sarr 1.5s ease-in-out infinite;opacity:.8}
+.scroll-arr:nth-child(2){animation-delay:.2s;opacity:.5}
+.scroll-arr:nth-child(3){animation-delay:.4s;opacity:.3}
+@keyframes sarr{0%{transform:rotate(-45deg) translate(0,0)}50%{transform:rotate(-45deg) translate(8px,8px)}100%{transform:rotate(-45deg) translate(0,0)}}
+.scroll-txt{font-family:'Quicksand',sans-serif;font-size:12px;color:var(--wh);text-shadow:0 1px 8px rgba(0,0,0,.4);letter-spacing:1px;margin-top:4px}
+
+.rsvp-s{padding:40px 20px;background:linear-gradient(180deg,#f8b4d9,var(--pkp));text-align:center}
+.rsvp-form{max-width:380px;margin:0 auto}
+.rsvp-desc{font-size:14px;color:var(--gr);margin-bottom:20px;line-height:1.6}
+.guest-row{display:flex;gap:10px;margin-bottom:12px;align-items:center}
+.guest-row input{flex:1;padding:14px 16px;border-radius:14px;border:2px solid var(--pkl);font-family:'Quicksand',sans-serif;font-size:15px;background:var(--wh);color:var(--bk);outline:none;transition:border .3s}
+.guest-row input:focus{border-color:var(--pk)}
+.guest-row input::placeholder{color:#bbb}
+.guest-row .age-input{max-width:70px;text-align:center}
+.guest-rm{width:36px;height:36px;border-radius:50%;border:none;background:rgba(233,30,140,.15);color:var(--pk);font-size:18px;cursor:pointer;flex-shrink:0;transition:all .3s}
+.guest-rm:hover{background:var(--pk);color:var(--wh)}
+.add-guest{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:50px;border:2px dashed var(--pkl);background:transparent;color:var(--pk);font-family:'Quicksand',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin:10px 0 20px;transition:all .3s}
+.add-guest:hover{background:var(--pkp);border-color:var(--pk)}
+.send-rsvp{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:50px;font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;text-decoration:none;border:none;cursor:pointer;background:linear-gradient(135deg,#25D366,#128C7E);color:var(--wh);box-shadow:0 4px 15px rgba(0,0,0,.15);transition:all .3s}
+.send-rsvp:active{transform:scale(.96)}
+
 .fh{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden}
 .fht{position:absolute;bottom:-50px;font-size:20px;opacity:.15;animation:fu linear infinite}
 @keyframes fu{0%{transform:translateY(0) rotate(0);opacity:.15}50%{opacity:.25}100%{transform:translateY(-110vh) rotate(360deg);opacity:0}}
@@ -203,8 +227,21 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 <div class="s-title">Confirme sua Presen&ccedil;a!</div>
 <p class="conf-t">Ficaremos muito felizes com voc&ecirc; l&aacute;!<br>Confirme pelo WhatsApp at&eacute; 20/04.</p>
 <div class="conf-b">
-<a href="https://wa.me/5521993569444?text=Ol%C3%A1%2C%20passando%20para%20confirmar%20minha%20presen%C3%A7a%20no%20anivers%C3%A1rio%20da%20Mait%C3%AA!%20%F0%9F%8E%80" target="_blank" class="btn btn-gn">&#x1F4AC; Confirmar via WhatsApp</a>
 <a href="https://maps.app.goo.gl/6gwa9Kq8VdLdZbSQ6" target="_blank" class="btn btn-pk">&#x1F4CD; Ver Localiza&ccedil;&atilde;o</a>
+</div>
+</section>
+
+<section class="rsvp-s" data-a>
+<div class="s-title">Quem vai? &#x1F389;</div>
+<p class="rsvp-desc">Informe o nome completo e a idade de cada pessoa que ir&aacute; &agrave; festa:</p>
+<div class="rsvp-form" id="rsvpForm">
+<div class="guest-row" id="guest-1">
+<input type="text" placeholder="Nome completo" class="name-input">
+<input type="number" placeholder="Idade" class="age-input" min="0" max="120">
+</div>
+<button type="button" class="add-guest" onclick="addGuest()">&#x2795; Adicionar pessoa</button>
+<br>
+<button type="button" class="send-rsvp" onclick="sendRSVP()">&#x1F4AC; Enviar confirma&ccedil;&atilde;o via WhatsApp</button>
 </div>
 </section>
 
@@ -213,6 +250,7 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 <span class="foot-h">&#x1F496;</span>
 </footer>
 
+<div class="scroll-ind" id="scrollInd"><div class="scroll-arr"></div><div class="scroll-arr"></div><div class="scroll-arr"></div><span class="scroll-txt">deslize para baixo</span></div>
 <button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Ligar/Desligar música">&#x1F3B5;</button>
 </div>
 
@@ -242,22 +280,61 @@ function toggleMusic(){
 }
 
 var autoScrollId=null;
+var guestCount=1;
+
 function autoScroll(){
-  var speed=0.8;
+  var speed=1.6;
   var scrolling=true;
+  var ind=document.getElementById('scrollInd');
+  ind.classList.add('vis');
   function step(){
     if(!scrolling)return;
     window.scrollBy(0,speed);
-    if((window.innerHeight+window.pageYOffset)>=document.body.scrollHeight-2){scrolling=false;return;}
+    if((window.innerHeight+window.pageYOffset)>=document.body.scrollHeight-2){scrolling=false;if(ind)ind.classList.add('fade');return;}
     autoScrollId=requestAnimationFrame(step);
   }
   autoScrollId=requestAnimationFrame(step);
-  // Stop auto-scroll on any touch/scroll by user
   var stopAuto=function(){scrolling=false;if(autoScrollId)cancelAnimationFrame(autoScrollId);
     window.removeEventListener('touchstart',stopAuto);window.removeEventListener('wheel',stopAuto);window.removeEventListener('mousedown',stopAuto);};
   window.addEventListener('touchstart',stopAuto,{passive:true});
   window.addEventListener('wheel',stopAuto,{passive:true});
   window.addEventListener('mousedown',stopAuto,{passive:true});
+  // Hide scroll indicator when near bottom
+  window.addEventListener('scroll',function(){
+    if(!ind)return;
+    var atBottom=(window.innerHeight+window.pageYOffset)>=document.body.scrollHeight-200;
+    if(atBottom){ind.classList.add('fade');}else{ind.classList.remove('fade');}
+  },{passive:true});
+}
+
+function addGuest(){
+  guestCount++;
+  var row=document.createElement('div');
+  row.className='guest-row';
+  row.id='guest-'+guestCount;
+  row.innerHTML='<input type="text" placeholder="Nome completo" class="name-input"><input type="number" placeholder="Idade" class="age-input" min="0" max="120"><button type="button" class="guest-rm" onclick="removeGuest('+guestCount+')">\u2716</button>';
+  var form=document.getElementById('rsvpForm');
+  var addBtn=form.querySelector('.add-guest');
+  form.insertBefore(row,addBtn);
+}
+
+function removeGuest(id){
+  var row=document.getElementById('guest-'+id);
+  if(row)row.remove();
+}
+
+function sendRSVP(){
+  var rows=document.querySelectorAll('.guest-row');
+  var guests=[];
+  rows.forEach(function(r){
+    var name=r.querySelector('.name-input').value.trim();
+    var age=r.querySelector('.age-input').value.trim();
+    if(name){guests.push(name+(age?' ('+age+' anos)':''));}
+  });
+  if(guests.length===0){alert('Preencha pelo menos um nome!');return;}
+  var msg='Ol\u00e1! \u{1F389} Confirmo presen\u00e7a no anivers\u00e1rio da Mait\u00ea! \u{1F380}\n\nConvidados:\n'+guests.map(function(g,i){return(i+1)+'. '+g;}).join('\n')+'\n\nTotal: '+guests.length+' pessoa'+(guests.length>1?'s':'');
+  var url='https://wa.me/5521993569444?text='+encodeURIComponent(msg);
+  window.open(url,'_blank');
 }
 
 function openEnv(){var s=document.getElementById('envS');s.classList.add('tap');startMusic();for(var i=0;i<20;i++)setTimeout(function(){var sp=document.createElement('div');sp.className='sparkle';sp.style.left=Math.random()*innerWidth+'px';sp.style.top=Math.random()*innerHeight+'px';sp.style.background=['#f5c518','#e91e8c','#ff69b4','#fff'][Math.floor(Math.random()*4)];sp.style.width=sp.style.height=(Math.random()*6+3)+'px';document.body.appendChild(sp);setTimeout(function(){sp.remove()},1500)},i*50);setTimeout(function(){s.classList.add('hid');var m=document.getElementById('mainC');m.classList.add('vis');setTimeout(function(){s.style.display='none';setTimeout(autoScroll,1500);},800)},800)}
