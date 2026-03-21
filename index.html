@@ -360,9 +360,9 @@ function addGuest(){
   row.className='guest-row';
   row.id='guest-'+guestCount;
   row.innerHTML='<input type="text" placeholder="Nome completo" class="name-input"><input type="number" placeholder="Idade" class="age-input" min="0" max="120"><button type="button" class="guest-rm" onclick="removeGuest('+guestCount+')">\u2716</button>';
-  var form=document.getElementById('rsvpForm');
-  var addBtn=form.querySelector('.add-guest');
-  form.insertBefore(row,addBtn);
+  var area=document.getElementById('guestArea');
+  var addBtn=area.querySelector('.add-guest');
+  area.insertBefore(row,addBtn);
 }
 
 function removeGuest(id){
