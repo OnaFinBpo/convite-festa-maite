@@ -129,6 +129,21 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 .rsvp-popup-btn:active{transform:scale(.95)}
 .rsvp-popup-ico{font-size:24px;margin-bottom:6px}
 @keyframes popIn{0%{opacity:0;transform:translateY(20px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.secret-badge{display:inline-block;background:linear-gradient(135deg,var(--gld),#e6a800);color:var(--bk);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;padding:8px 16px;border-radius:50px;margin-top:14px;letter-spacing:1px;box-shadow:0 3px 12px rgba(245,197,24,.4);animation:glw 2s ease-in-out infinite}
+@keyframes glw{0%,100%{box-shadow:0 3px 12px rgba(245,197,24,.4)}50%{box-shadow:0 3px 20px rgba(245,197,24,.7)}}
+.secret-hint{font-size:12px;color:var(--gr);margin-top:6px;font-style:italic}
+
+.code-field{display:flex;gap:10px;margin-bottom:16px;align-items:center;justify-content:center}
+.code-field input{width:160px;padding:14px 16px;border-radius:14px;border:2px solid var(--gld);font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:3px;background:var(--wh);color:var(--bk);outline:none;transition:border .3s}
+.code-field input:focus{border-color:var(--pk)}
+.code-field input::placeholder{color:#ccc;letter-spacing:1px;font-size:13px}
+.code-ok{color:#25D366;font-size:24px;display:none}
+.code-ok.vis{display:inline}
+
+.form-locked{opacity:.4;pointer-events:none;filter:blur(2px);transition:all .5s}
+.form-locked.unlocked{opacity:1;pointer-events:auto;filter:none}
+.lock-msg{font-size:13px;color:var(--pk);font-weight:700;margin-bottom:12px;display:block}
+.lock-msg.hidden{display:none}
 .music-btn{position:fixed;bottom:20px;right:20px;z-index:900;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--pk),var(--pkd));border:3px solid var(--wh);color:var(--wh);font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(233,30,140,.5);display:none;align-items:center;justify-content:center;transition:all .3s}
 .music-btn.vis{display:flex}
 .music-btn:active{transform:scale(.85)}
@@ -193,6 +208,7 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 <div class="h-age">5</div>
 <p class="h-sub">Um dia m&aacute;gico no mundo da Minnie!</p>
 <div class="scroll-h">&#x25BC;</div>
+<p style="font-size:12px;color:rgba(214,51,132,.7);margin-top:10px;letter-spacing:1px">&#x1F50D; Leia todo o convite para encontrar o <strong>c&oacute;digo secreto</strong></p>
 </div></section>
 
 
@@ -244,19 +260,28 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 <div class="conf-b">
 <a href="https://maps.app.goo.gl/6gwa9Kq8VdLdZbSQ6" target="_blank" class="btn btn-pk">&#x1F4CD; Ver Localiza&ccedil;&atilde;o</a>
 </div>
+<div class="secret-badge">&#x1F511; C&oacute;digo secreto: MAITE5</div>
+<p class="secret-hint">Guarde este c&oacute;digo para confirmar sua presen&ccedil;a!</p>
 </section>
 
 <section class="rsvp-s" data-a>
 <div class="s-title">Quem vai? &#x1F389;</div>
 <p class="rsvp-desc">Informe o nome completo e a idade de cada pessoa que ir&aacute; &agrave; festa:</p>
 <div class="rsvp-form" id="rsvpForm">
+<span class="lock-msg" id="lockMsg">&#x1F512; Digite o c&oacute;digo secreto para desbloquear:</span>
+<div class="code-field">
+<input type="text" id="codeInput" placeholder="c&oacute;digo" maxlength="6" oninput="checkCode()">
+<span class="code-ok" id="codeOk">&#x2705;</span>
+</div>
+<div class="form-locked" id="guestArea">
 <div class="guest-row" id="guest-1">
 <input type="text" placeholder="Nome completo" class="name-input">
 <input type="number" placeholder="Idade" class="age-input" min="0" max="120">
 </div>
 <button type="button" class="add-guest" onclick="addGuest()">&#x2795; Adicionar pessoa</button>
 <br>
-<button type="button" class="send-rsvp" onclick="sendRSVP()">&#x1F4AC; Enviar confirma&ccedil;&atilde;o via WhatsApp</button>
+</div>
+<button type="button" class="send-rsvp" id="sendBtn" onclick="sendRSVP()" style="opacity:.4;pointer-events:none">&#x1F4AC; Enviar confirma&ccedil;&atilde;o via WhatsApp</button>
 </div>
 </section>
 
@@ -268,7 +293,7 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 <div class="rsvp-popup" id="rsvpPopup">
 <button class="rsvp-popup-close" onclick="closePopup()">&times;</button>
 <div class="rsvp-popup-ico">&#x1F389;</div>
-<p class="rsvp-popup-txt"><strong>N&atilde;o esque&ccedil;a!</strong><br>Preencha os nomes e idades de quem vai &agrave; festa no formul&aacute;rio abaixo &#x1F447;</p>
+<p class="rsvp-popup-txt"><strong>N&atilde;o esque&ccedil;a!</strong><br>Voc&ecirc; encontrou o <strong>c&oacute;digo secreto</strong>? Use-o para confirmar presen&ccedil;a no formul&aacute;rio abaixo &#x1F447;</p>
 <button class="rsvp-popup-btn" onclick="scrollToForm()">&#x1F4DD; Confirmar presen&ccedil;a</button>
 </div>
 <div class="scroll-ind" id="scrollInd"><div class="scroll-arr"></div><div class="scroll-arr"></div><div class="scroll-arr"></div><span class="scroll-txt">deslize para baixo</span></div>
@@ -384,6 +409,31 @@ window.addEventListener('scroll',function(){
   var scrollPct=(window.pageYOffset+window.innerHeight)/document.body.scrollHeight;
   if(scrollPct>0.65)showPopup();
 },{passive:true});
+
+var SECRET_CODE='MAITE5';
+function checkCode(){
+  var input=document.getElementById('codeInput');
+  var val=input.value.toUpperCase().trim();
+  var ok=document.getElementById('codeOk');
+  var area=document.getElementById('guestArea');
+  var msg=document.getElementById('lockMsg');
+  var sendBtn=document.getElementById('sendBtn');
+  if(val===SECRET_CODE){
+    ok.classList.add('vis');
+    area.classList.add('unlocked');
+    msg.classList.add('hidden');
+    input.style.borderColor='#25D366';
+    if(sendBtn)sendBtn.style.opacity='1';
+    if(sendBtn)sendBtn.style.pointerEvents='auto';
+  }else{
+    ok.classList.remove('vis');
+    area.classList.remove('unlocked');
+    msg.classList.remove('hidden');
+    input.style.borderColor='#f5c518';
+    if(sendBtn)sendBtn.style.opacity='.4';
+    if(sendBtn)sendBtn.style.pointerEvents='none';
+  }
+}
 </script>
 <audio id="bgMusic" loop preload="auto"><source src="musica.mp3" type="audio/mpeg"></audio>
 </body>
