@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Maitê faz 5! - Convite Especial 🎀</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <!-- Open Graph / WhatsApp Preview -->
 <meta property="og:type" content="website">
@@ -326,6 +327,10 @@ function toggleMusic(){
   }
 }
 
+var SUPABASE_URL='https://hasxlvvzpmatijoswimc.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhc3hsdnZ6cG1hdGlqb3N3aW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDIxNzUsImV4cCI6MjA4Nzk3ODE3NX0.XDeOPqKagwDe_jAbpf0Dzee1jQSI57ZX07EKEj9yJvw';
+var supabase=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
+
 var autoScrollId=null;
 var guestCount=1;
 
@@ -372,14 +377,34 @@ function removeGuest(id){
 
 function sendRSVP(){
   var rows=document.querySelectorAll('.guest-row');
-  var guests=[];
+  var guestData=[];
+  var guestTexts=[];
+  var firstPhone='';
   rows.forEach(function(r){
     var name=r.querySelector('.name-input').value.trim();
     var age=r.querySelector('.age-input').value.trim();
-    if(name){guests.push(name+(age?' ('+age+' anos)':''));}
+    if(name){
+      guestTexts.push(name+(age?' ('+age+' anos)':''));
+      guestData.push({guest_name:name,guest_age:age?parseInt(age):null,status:'confirmado',source:'convite'});
+    }
   });
-  if(guests.length===0){alert('Preencha pelo menos um nome!');return;}
-  var msg='Ol\u00e1! \u{1F389} Confirmo presen\u00e7a no anivers\u00e1rio da Mait\u00ea! \u{1F380}\n\nConvidados:\n'+guests.map(function(g,i){return(i+1)+'. '+g;}).join('\n')+'\n\nTotal: '+guests.length+' pessoa'+(guests.length>1?'s':'');
+  if(guestData.length===0){alert('Preencha pelo menos um nome!');return;}
+
+  // Gerar family_group (agrupa todos os convidados deste RSVP)
+  var familyId=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  var familyLabel=guestData.length===1?guestData[0].guest_name:'Grupo de '+guestData[0].guest_name;
+  guestData.forEach(function(g){g.family_group=familyLabel;});
+
+  // Salvar no Supabase (assíncrono, não bloqueia o WhatsApp)
+  if(supabase){
+    supabase.from('festa_rsvps').insert(guestData).then(function(res){
+      if(res.error)console.warn('Erro ao salvar RSVP:',res.error.message);
+      else console.log('RSVP salvo com sucesso:',guestData.length,'convidados');
+    });
+  }
+
+  // Abrir WhatsApp normalmente
+  var msg='Ol\u00e1! \u{1F389} Confirmo presen\u00e7a no anivers\u00e1rio da Mait\u00ea! \u{1F380}\n\nConvidados:\n'+guestTexts.map(function(g,i){return(i+1)+'. '+g;}).join('\n')+'\n\nTotal: '+guestTexts.length+' pessoa'+(guestTexts.length>1?'s':'');
   var url='https://wa.me/5521993569444?text='+encodeURIComponent(msg);
   window.open(url,'_blank');
 }

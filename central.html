@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Pacifico&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -217,6 +218,11 @@ var useState = React.useState;
 var useEffect = React.useEffect;
 var useCallback = React.useCallback;
 var useRef = React.useRef;
+
+/* ===================== SUPABASE ===================== */
+var SUPABASE_URL='https://hasxlvvzpmatijoswimc.supabase.co';
+var SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhhc3hsdnZ6cG1hdGlqb3N3aW1jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0MDIxNzUsImV4cCI6MjA4Nzk3ODE3NX0.XDeOPqKagwDe_jAbpf0Dzee1jQSI57ZX07EKEj9yJvw';
+var sb=window.supabase?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 
 /* ===================== AUTH ===================== */
 var AUTH_USERS = [
@@ -696,14 +702,70 @@ function GuestsPage(props) {
   var _s4=useState(null);var edit=_s4[0];var setEdit=_s4[1];
   var emptyForm={name:'',adults:1,kids:0,status:'pendente',phone:'',notes:'',dietary:''};
   var _s5=useState(Object.assign({},emptyForm));var form=_s5[0];var setForm=_s5[1];
+  var _s6=useState([]);var rsvps=_s6[0];var setRsvps=_s6[1];
+  var _s7=useState(false);var syncing=_s7[0];var setSyncing=_s7[1];
+  var _s8=useState('');var syncMsg=_s8[0];var setSyncMsg=_s8[1];
 
-  var ta=d.guests.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
-  var tk=d.guests.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
-  var conf=d.guests.filter(function(g){return g.status==='confirmado'});
+  // Carregar RSVPs do Supabase ao abrir a página
+  useEffect(function(){fetchRsvps()},[]);
+
+  function fetchRsvps(){
+    if(!sb)return;
+    setSyncing(true);setSyncMsg('');
+    sb.from('festa_rsvps').select('*').order('created_at',{ascending:true}).then(function(res){
+      setSyncing(false);
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      setRsvps(res.data||[]);
+      setSyncMsg('Sincronizado: '+(res.data?res.data.length:0)+' confirmações');
+      setTimeout(function(){setSyncMsg('')},3000);
+    });
+  }
+
+  function importRsvps(){
+    if(rsvps.length===0){setSyncMsg('Nenhum RSVP para importar');setTimeout(function(){setSyncMsg('')},3000);return}
+    // Agrupar por family_group
+    var groups={};
+    rsvps.forEach(function(r){
+      var key=r.family_group||r.guest_name;
+      if(!groups[key])groups[key]={names:[],ages:[],status:r.status,created:r.created_at};
+      groups[key].names.push(r.guest_name);
+      groups[key].ages.push(r.guest_age);
+    });
+    var newGuests=[];
+    var existingNames=d.guests.map(function(g){return g.name.toLowerCase()});
+    Object.keys(groups).forEach(function(key){
+      var g=groups[key];
+      // Evitar duplicatas
+      if(existingNames.indexOf(key.toLowerCase())>=0)return;
+      var adults=0;var kids=0;
+      g.ages.forEach(function(age){if(age!==null&&age<12)kids++;else adults++});
+      var nameList=g.names.join(', ');
+      newGuests.push({
+        id:uid(),
+        name:key,
+        adults:adults,
+        kids:kids,
+        status:g.status||'confirmado',
+        phone:'',
+        notes:'Via convite: '+nameList,
+        dietary:''
+      });
+    });
+    if(newGuests.length===0){setSyncMsg('Todos já importados!');setTimeout(function(){setSyncMsg('')},3000);return}
+    up('guests',function(prev){return prev.concat(newGuests)});
+    setSyncMsg(newGuests.length+' grupo(s) importado(s)!');
+    setTimeout(function(){setSyncMsg('')},4000);
+  }
+
+  // Combinar lista local + contagem de RSVPs online
+  var allGuests=d.guests;
+  var ta=allGuests.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
+  var tk=allGuests.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
+  var conf=allGuests.filter(function(g){return g.status==='confirmado'});
   var ca=conf.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
   var ck=conf.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
 
-  var filtered=d.guests.filter(function(g){
+  var filtered=allGuests.filter(function(g){
     if(filter!=='all'&&g.status!==filter)return false;
     if(search&&g.name.toLowerCase().indexOf(search.toLowerCase())<0)return false;
     return true;
@@ -722,11 +784,26 @@ function GuestsPage(props) {
 
   return React.createElement('div',null,
     React.createElement(PageNav,{title:'Convidados',subtitle:'Lista completa e controle de RSVP',showBack:true,goHome:gh,action:React.createElement('button',{className:'btn btn-primary',onClick:openAdd},React.createElement(Ic.Plus,null),' Novo Convidado')}),
+
+    /* Barra de Sincronização Supabase */
+    React.createElement('div',{className:'card',style:{marginBottom:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}},
+      React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
+        React.createElement('span',{style:{fontSize:'0.85rem',color:'var(--gray-600)'}},
+          rsvps.length>0?'📡 '+rsvps.length+' confirmação(ões) online':'📡 Nenhuma confirmação online ainda'
+        ),
+        syncMsg&&React.createElement('span',{style:{fontSize:'0.75rem',color:'var(--green)',fontWeight:600}},syncMsg)
+      ),
+      React.createElement('div',{style:{display:'flex',gap:8}},
+        React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:fetchRsvps,disabled:syncing},syncing?'Sincronizando...':'🔄 Atualizar'),
+        rsvps.length>0&&React.createElement('button',{className:'btn btn-primary btn-sm',onClick:importRsvps},'📥 Importar para lista')
+      )
+    ),
+
     React.createElement('div',{className:'kpi-grid',style:{gridTemplateColumns:'repeat(4,1fr)'}},
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,d.guests.length),React.createElement('p',null,'Famílias'))),
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGuests.length),React.createElement('p',null,'Famílias'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--blue)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,ta+tk),React.createElement('p',null,ta+' ad. + '+tk+' cr.'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--green)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,ca+ck),React.createElement('p',null,'Confirmados'))),
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--orange)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,d.guests.filter(function(g){return g.status==='pendente'}).length),React.createElement('p',null,'Pendentes')))
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--orange)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGuests.filter(function(g){return g.status==='pendente'}).length),React.createElement('p',null,'Pendentes')))
     ),
     React.createElement('div',{className:'search-box'},React.createElement(Ic.Search,null),React.createElement('input',{type:'text',placeholder:'Buscar convidado...',value:search,onChange:function(e){setSearch(e.target.value)}})),
     React.createElement('div',{className:'filter-row'},
