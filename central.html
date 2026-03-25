@@ -459,11 +459,19 @@ function App() {
   var _s3=useState(function(){return loadData()||getDefaultData()}); var data=_s3[0]; var setData=_s3[1];
   var _s4=useState(false); var sidebarOpen=_s4[0]; var setSidebarOpen=_s4[1];
   var _s5=useState({d:0,h:0,m:0,s:0}); var countdown=_s5[0]; var setCountdown=_s5[1];
+  var _s6b=useState(0); var guestCount=_s6b[0]; var setGuestCount=_s6b[1];
 
   useEffect(function(){saveData(data)},[data]);
   useEffect(function(){
     function tick(){var now=new Date();var diff=PARTY_DATE-now;if(diff<=0){setCountdown({d:0,h:0,m:0,s:0});return}setCountdown({d:Math.floor(diff/86400000),h:Math.floor((diff%86400000)/3600000),m:Math.floor((diff%3600000)/60000),s:Math.floor((diff%60000)/1000)})}
     tick();var id=setInterval(tick,1000);return function(){clearInterval(id)}
+  },[]);
+  useEffect(function(){
+    if(!sb)return;
+    sb.from('festa_rsvps').select('id',{count:'exact'}).then(function(res){
+      if(res.count!==null&&res.count!==undefined)setGuestCount(res.count);
+      else if(res.data)setGuestCount(res.data.length);
+    });
   },[]);
 
   var update=useCallback(function(key,val){setData(function(prev){var nv=typeof val==='function'?val(prev[key]):val;return Object.assign({},prev,{[key]:nv})});},[]);
@@ -478,7 +486,7 @@ function App() {
     {id:'timeline',label:'Roadmap',icon:Ic.Timeline},
     {id:'tasks',label:'Tarefas',icon:Ic.Tasks,badge:data.tasks.filter(function(t){return t.status==='pending'}).length},
     {id:'budget',label:'Orçamento',icon:Ic.Budget},
-    {id:'guests',label:'Convidados',icon:Ic.Guests,badge:data.guests.length},
+    {id:'guests',label:'Convidados',icon:Ic.Guests,badge:guestCount},
     {id:'notes',label:'Notas',icon:Ic.Notes},
   ];
 
@@ -536,7 +544,7 @@ function DashboardPage(props) {
       var totalP=data.length;
       var under6=0;var adultos=0;var criancas=0;
       /* Nomes isentos: aniversariante + pais + 2 irmãos (contrato permite max 2) */
-      var isentosNomes=['maitê souza nogueira','rodrigo mendes porto nogueira','vanniely caroline gonçalves souza','ana vitória nogueira','igor pedro nogueira'];
+      var isentosNomes=['maitê souza nogueira','rodrigo mendes porto nogueira','vanniely caroline gonçalves souza','ana vitória pedro nogueira','igor pedro nogueira'];
       /* Nota: Alicia (3ª irmã) NÃO é isenta pois contrato permite max 2 irmãos */
       data.forEach(function(r){
         if(r.guest_age!==null&&r.guest_age<12)criancas++;else adultos++;
@@ -848,13 +856,25 @@ function GuestsPage(props) {
     setTimeout(function(){setSyncMsg('')},4000);
   }
 
-  // Combinar lista local + contagem de RSVPs online
-  var allGuests=d.guests;
-  var ta=allGuests.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
-  var tk=allGuests.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
-  var conf=allGuests.filter(function(g){return g.status==='confirmado'});
-  var ca=conf.reduce(function(s,g){return s+(Number(g.adults)||0)},0);
-  var ck=conf.reduce(function(s,g){return s+(Number(g.kids)||0)},0);
+  // Contagem direta do Supabase (fonte única de verdade)
+  var rsvpGroups={};
+  rsvps.forEach(function(r){
+    var key=r.family_group||r.guest_name;
+    if(!rsvpGroups[key])rsvpGroups[key]={names:[],ages:[],status:r.status};
+    rsvpGroups[key].names.push(r.guest_name);
+    rsvpGroups[key].ages.push(r.guest_age);
+  });
+  var allGuests=Object.keys(rsvpGroups).map(function(key){
+    var g=rsvpGroups[key];
+    var adults=0;var kids=0;
+    g.ages.forEach(function(age){if(age!==null&&age<12)kids++;else adults++});
+    return {id:key,name:key,adults:adults,kids:kids,status:g.status||'confirmado',phone:'',notes:g.names.join(', '),dietary:''};
+  });
+  var ta=rsvps.filter(function(r){return r.guest_age===null||r.guest_age>=12}).length;
+  var tk=rsvps.filter(function(r){return r.guest_age!==null&&r.guest_age<12}).length;
+  var conf=rsvps.filter(function(r){return r.status==='confirmado'});
+  var ca=conf.filter(function(r){return r.guest_age===null||r.guest_age>=12}).length;
+  var ck=conf.filter(function(r){return r.guest_age!==null&&r.guest_age<12}).length;
 
   var filtered=allGuests.filter(function(g){
     if(filter!=='all'&&g.status!==filter)return false;
@@ -983,16 +1003,15 @@ function GuestsPage(props) {
         syncMsg&&React.createElement('span',{style:{fontSize:'0.75rem',color:'var(--green)',fontWeight:600}},syncMsg)
       ),
       React.createElement('div',{style:{display:'flex',gap:8}},
-        React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:fetchRsvps,disabled:syncing},syncing?'Sincronizando...':'🔄 Atualizar'),
-        rsvps.length>0&&React.createElement('button',{className:'btn btn-primary btn-sm',onClick:importRsvps},'📥 Importar para lista')
+        React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:fetchRsvps,disabled:syncing},syncing?'Sincronizando...':'🔄 Atualizar')
       )
     ),
 
     React.createElement('div',{className:'kpi-grid',style:{gridTemplateColumns:'repeat(4,1fr)'}},
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGuests.length),React.createElement('p',null,'Famílias'))),
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--blue)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,ta+tk),React.createElement('p',null,ta+' ad. + '+tk+' cr.'))),
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGuests.length),React.createElement('p',null,'Grupos'))),
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--blue)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,rsvps.length),React.createElement('p',null,ta+' ad. + '+tk+' cr.'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--green)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,ca+ck),React.createElement('p',null,'Confirmados'))),
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--orange)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGuests.filter(function(g){return g.status==='pendente'}).length),React.createElement('p',null,'Pendentes')))
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--orange)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,rsvps.filter(function(r){return r.status==='pendente'}).length),React.createElement('p',null,'Pendentes')))
     ),
     React.createElement('div',{className:'search-box'},React.createElement(Ic.Search,null),React.createElement('input',{type:'text',placeholder:'Buscar convidado...',value:search,onChange:function(e){setSearch(e.target.value)}})),
     React.createElement('div',{className:'filter-row'},
