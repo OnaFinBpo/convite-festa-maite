@@ -130,21 +130,29 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 .rsvp-popup-btn:active{transform:scale(.95)}
 .rsvp-popup-ico{font-size:24px;margin-bottom:6px}
 @keyframes popIn{0%{opacity:0;transform:translateY(20px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
-.secret-badge{display:inline-block;background:linear-gradient(135deg,var(--gld),#e6a800);color:var(--bk);font-family:'Quicksand',sans-serif;font-size:13px;font-weight:700;padding:8px 16px;border-radius:50px;margin-top:14px;letter-spacing:1px;box-shadow:0 3px 12px rgba(245,197,24,.4);animation:glw 2s ease-in-out infinite}
-@keyframes glw{0%,100%{box-shadow:0 3px 12px rgba(245,197,24,.4)}50%{box-shadow:0 3px 20px rgba(245,197,24,.7)}}
-.secret-hint{font-size:12px;color:var(--gr);margin-top:6px;font-style:italic}
+.secret-badge{display:inline-block;background:linear-gradient(135deg,var(--gld),#e6a800);color:var(--bk);font-family:'Quicksand',sans-serif;font-size:15px;font-weight:700;padding:12px 24px;border-radius:50px;margin-top:18px;letter-spacing:1.5px;box-shadow:0 3px 12px rgba(245,197,24,.4);animation:glw 2s ease-in-out infinite}
+.secret-badge strong{font-size:18px;letter-spacing:3px;color:#9D174D}
+@keyframes glw{0%,100%{box-shadow:0 3px 12px rgba(245,197,24,.4)}50%{box-shadow:0 3px 24px rgba(245,197,24,.8)}}
+.secret-hint{font-size:13px;color:var(--pk);margin-top:10px;font-weight:600;font-style:normal;animation:pulseHint 2s ease-in-out infinite}
+@keyframes pulseHint{0%,100%{opacity:1}50%{opacity:.6}}
 
-.code-field{display:flex;gap:10px;margin-bottom:16px;align-items:center;justify-content:center}
-.code-field input{width:160px;padding:14px 16px;border-radius:14px;border:2px solid var(--gld);font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:3px;background:var(--wh);color:var(--bk);outline:none;transition:border .3s}
+.step-box{background:rgba(255,255,255,0.9);border-radius:16px;padding:18px 20px;margin-bottom:16px;border:2px solid var(--pkl);text-align:left;transition:all .5s}
+.step-box.step-locked{opacity:.35;pointer-events:none;filter:blur(1.5px)}
+.step-box.step-done{border-color:#25D366;background:rgba(209,250,229,0.4)}
+.step-tag{display:inline-block;background:linear-gradient(135deg,var(--pk),var(--pkd));color:var(--wh);font-size:11px;font-weight:800;padding:4px 12px;border-radius:50px;letter-spacing:1px;margin-bottom:10px;font-family:'Quicksand',sans-serif}
+.step-done .step-tag{background:linear-gradient(135deg,#25D366,#128C7E)}
+.step-label{font-size:14px;color:var(--bk);font-weight:600;line-height:1.5;margin-bottom:12px;font-family:'Quicksand',sans-serif}
+.step-hint{font-size:12px;color:var(--gr);margin-top:4px}
+
+.code-field{display:flex;gap:10px;margin-bottom:8px;align-items:center;justify-content:center}
+.code-field input{width:220px;padding:14px 16px;border-radius:14px;border:2px solid var(--gld);font-family:'Quicksand',sans-serif;font-size:16px;font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:3px;background:var(--wh);color:var(--bk);outline:none;transition:border .3s}
 .code-field input:focus{border-color:var(--pk)}
-.code-field input::placeholder{color:#ccc;letter-spacing:1px;font-size:13px}
+.code-field input::placeholder{color:#bbb;letter-spacing:1px;font-size:12px;text-transform:none;font-weight:500}
 .code-ok{color:#25D366;font-size:24px;display:none}
 .code-ok.vis{display:inline}
 
 .form-locked{opacity:.4;pointer-events:none;filter:blur(2px);transition:all .5s}
 .form-locked.unlocked{opacity:1;pointer-events:auto;filter:none}
-.lock-msg{font-size:13px;color:var(--pk);font-weight:700;margin-bottom:12px;display:block}
-.lock-msg.hidden{display:none}
 .music-btn{position:fixed;bottom:20px;right:20px;z-index:900;width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--pk),var(--pkd));border:3px solid var(--wh);color:var(--wh);font-size:20px;cursor:pointer;box-shadow:0 4px 20px rgba(233,30,140,.5);display:none;align-items:center;justify-content:center;transition:all .3s}
 .music-btn.vis{display:flex}
 .music-btn:active{transform:scale(.85)}
@@ -257,23 +265,32 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 
 <section class="conf-s">
 <div class="s-title">Confirme sua Presen&ccedil;a!</div>
-<p class="conf-t">Ficaremos muito felizes com voc&ecirc; l&aacute;!<br>Confirme pelo WhatsApp at&eacute; 20/04.</p>
+<p class="conf-t">Ficaremos muito felizes com voc&ecirc; l&aacute;!<br>Confirme pelo WhatsApp at&eacute; 10/04.</p>
 <div class="conf-b">
 <a href="https://maps.app.goo.gl/6gwa9Kq8VdLdZbSQ6" target="_blank" class="btn btn-pk">&#x1F4CD; Ver Localiza&ccedil;&atilde;o</a>
 </div>
-<div class="secret-badge">&#x1F511; C&oacute;digo secreto: MAITE5</div>
-<p class="secret-hint">Guarde este c&oacute;digo para confirmar sua presen&ccedil;a!</p>
+<div class="secret-badge" id="secretBadge">&#x1F511; C&oacute;digo secreto: <strong>MAITE5</strong></div>
+<p class="secret-hint">&#x1F446; Anote esse c&oacute;digo! Voc&ecirc; vai precisar dele logo abaixo para confirmar presen&ccedil;a.</p>
 </section>
 
 <section class="rsvp-s" data-a>
 <div class="s-title">Quem vai? &#x1F389;</div>
-<p class="rsvp-desc">Informe o nome completo e a idade de cada pessoa que ir&aacute; &agrave; festa:</p>
+<p class="rsvp-desc">Siga os <strong>3 passos</strong> abaixo para confirmar sua presen&ccedil;a:</p>
 <div class="rsvp-form" id="rsvpForm">
-<span class="lock-msg" id="lockMsg">&#x1F512; Digite o c&oacute;digo secreto para desbloquear:</span>
+
+<div class="step-box" id="step1box">
+<div class="step-tag">PASSO 1 DE 3</div>
+<p class="step-label">&#x1F513; Digite o c&oacute;digo secreto que apareceu logo acima para desbloquear o formul&aacute;rio:</p>
 <div class="code-field">
-<input type="text" id="codeInput" placeholder="c&oacute;digo" maxlength="6" oninput="checkCode()">
+<input type="text" id="codeInput" placeholder="Digite aqui: MAITE5" maxlength="6" oninput="checkCode()" autocomplete="off">
 <span class="code-ok" id="codeOk">&#x2705;</span>
 </div>
+<p class="step-hint" id="codeHint">&#x1F4A1; <em>Dica: o c&oacute;digo &eacute; o nome da aniversariante + a idade que ela far&aacute;!</em></p>
+</div>
+
+<div class="step-box step-locked" id="step2box">
+<div class="step-tag">PASSO 2 DE 3</div>
+<p class="step-label">&#x1F4DD; Informe o nome completo e a idade de cada pessoa que ir&aacute; &agrave; festa:</p>
 <div class="form-locked" id="guestArea">
 <div class="guest-row" id="guest-1">
 <input type="text" placeholder="Nome completo" class="name-input">
@@ -282,7 +299,13 @@ body{font-family:'Quicksand',sans-serif;background:var(--pkbg);color:var(--bk);o
 <button type="button" class="add-guest" onclick="addGuest()">&#x2795; Adicionar pessoa</button>
 <br>
 </div>
+</div>
+
+<div class="step-box step-locked" id="step3box">
+<div class="step-tag">PASSO 3 DE 3</div>
+<p class="step-label">&#x1F4AC; Clique no bot&atilde;o abaixo para enviar sua confirma&ccedil;&atilde;o via WhatsApp:</p>
 <button type="button" class="send-rsvp" id="sendBtn" onclick="sendRSVP()" style="opacity:.4;pointer-events:none">&#x1F4AC; Enviar confirma&ccedil;&atilde;o via WhatsApp</button>
+</div>
 <div style="margin-top:20px;padding:14px 18px;background:rgba(255,255,255,0.85);border-radius:14px;border-left:4px solid #BE185D;text-align:left;font-size:13px;color:#4B5563;line-height:1.6">
 <strong style="color:#BE185D">&#x1F4C5; Prazo de confirma&ccedil;&atilde;o:</strong><br>
 As confirma&ccedil;&otilde;es dever&atilde;o ser realizadas at&eacute; <strong style="color:#9D174D">10 de abril de 2026</strong>.<br>
@@ -294,13 +317,13 @@ Ap&oacute;s essa data, a vaga poder&aacute; ser disponibilizada para outro convi
 <footer class="foot">
 <p class="foot-t">Mait&ecirc; e fam&iacute;lia esperam por voc&ecirc;!</p>
 <span class="foot-h">&#x1F496;</span>
-<a href="/central.html" style="display:inline-block;margin-top:18px;padding:10px 24px;background:rgba(190,24,93,0.12);color:#BE185D;border-radius:99px;font-size:0.78rem;font-weight:700;text-decoration:none;font-family:'Quicksand',sans-serif;letter-spacing:0.3px;transition:all .2s;border:1.5px solid rgba(190,24,93,0.2);" onmouseover="this.style.background='rgba(190,24,93,0.22)'" onmouseout="this.style.background='rgba(190,24,93,0.12)'">&#x1F512; Central de Gest&atilde;o</a>
+<a href="/central.html" style="display:inline-block;margin-top:18px;padding:10px 24px;background:rgba(190,24,93,0.08);color:var(--gr);border-radius:99px;font-size:0.72rem;font-weight:600;text-decoration:none;font-family:'Quicksand',sans-serif;letter-spacing:0.3px;transition:all .2s;border:1px solid rgba(190,24,93,0.15);" onmouseover="this.style.background='rgba(190,24,93,0.18)';this.style.color='#BE185D'" onmouseout="this.style.background='rgba(190,24,93,0.08)';this.style.color='#6B7280'">&#x1F512; Acesso restrito &mdash; Pais e Organizadores</a>
 </footer>
 
 <div class="rsvp-popup" id="rsvpPopup">
 <button class="rsvp-popup-close" onclick="closePopup()">&times;</button>
 <div class="rsvp-popup-ico">&#x1F389;</div>
-<p class="rsvp-popup-txt"><strong>N&atilde;o esque&ccedil;a!</strong><br>Voc&ecirc; encontrou o <strong>c&oacute;digo secreto</strong>? Use-o para confirmar presen&ccedil;a no formul&aacute;rio abaixo &#x1F447;</p>
+<p class="rsvp-popup-txt"><strong>N&atilde;o esque&ccedil;a!</strong><br>Role at&eacute; o final para confirmar presen&ccedil;a em <strong>3 passos simples</strong> &#x1F447;</p>
 <button class="rsvp-popup-btn" onclick="scrollToForm()">&#x1F4DD; Confirmar presen&ccedil;a</button>
 </div>
 <div class="scroll-ind" id="scrollInd"><div class="scroll-arr"></div><div class="scroll-arr"></div><div class="scroll-arr"></div><span class="scroll-txt">deslize para baixo</span></div>
@@ -447,22 +470,32 @@ function checkCode(){
   var val=input.value.toUpperCase().trim();
   var ok=document.getElementById('codeOk');
   var area=document.getElementById('guestArea');
-  var msg=document.getElementById('lockMsg');
   var sendBtn=document.getElementById('sendBtn');
+  var step1=document.getElementById('step1box');
+  var step2=document.getElementById('step2box');
+  var step3=document.getElementById('step3box');
+  var hint=document.getElementById('codeHint');
   if(val===SECRET_CODE){
     ok.classList.add('vis');
     area.classList.add('unlocked');
-    msg.classList.add('hidden');
     input.style.borderColor='#25D366';
-    if(sendBtn)sendBtn.style.opacity='1';
-    if(sendBtn)sendBtn.style.pointerEvents='auto';
+    if(step1){step1.classList.add('step-done');}
+    if(step2){step2.classList.remove('step-locked');}
+    if(step3){step3.classList.remove('step-locked');}
+    if(hint)hint.style.display='none';
+    if(sendBtn){sendBtn.style.opacity='1';sendBtn.style.pointerEvents='auto';}
+    setTimeout(function(){
+      if(area)area.scrollIntoView({behavior:'smooth',block:'center'});
+    },400);
   }else{
     ok.classList.remove('vis');
     area.classList.remove('unlocked');
-    msg.classList.remove('hidden');
     input.style.borderColor='#f5c518';
-    if(sendBtn)sendBtn.style.opacity='.4';
-    if(sendBtn)sendBtn.style.pointerEvents='none';
+    if(step1){step1.classList.remove('step-done');}
+    if(step2){step2.classList.add('step-locked');}
+    if(step3){step3.classList.add('step-locked');}
+    if(hint)hint.style.display='block';
+    if(sendBtn){sendBtn.style.opacity='.4';sendBtn.style.pointerEvents='none';}
   }
 }
 </script>
