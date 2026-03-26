@@ -567,6 +567,37 @@ function DashboardPage(props) {
     });
   },[]);
 
+  /* Notificação em tempo real de novos RSVPs */
+  var _ntf=useState([]);var notifications=_ntf[0];var setNotifications=_ntf[1];
+  useEffect(function(){
+    if(!sb)return;
+    var channel=sb.channel('rsvp-realtime').on('postgres_changes',{event:'INSERT',schema:'public',table:'festa_rsvps'},function(payload){
+      var n=payload.new;
+      var msg='🆕 '+n.guest_name+(n.guest_age?' ('+n.guest_age+')':'')+' confirmou!';
+      setNotifications(function(prev){return[{id:Date.now(),text:msg,time:new Date()}].concat(prev).slice(0,5)});
+      /* Atualizar contagem */
+      sb.from('festa_rsvps').select('*').eq('status','confirmado').order('guest_name').then(function(res){
+        if(res.error||!res.data)return;
+        var data=res.data;var totalP=data.length;var under6=0;var adultos=0;var criancas=0;
+        var isentosNomes=['maitê souza nogueira','rodrigo mendes porto nogueira','vanniely caroline gonçalves souza','alicia silva souza luiz'];
+        var isentosList=[];var contamList=[];var isentosCount=0;
+        data.forEach(function(r){
+          if(r.guest_age!==null&&r.guest_age<12)criancas++;else adultos++;
+          if(r.guest_age!==null&&r.guest_age<6)under6++;
+          var nome=r.guest_name.toLowerCase().trim();
+          var isIsento=isentosNomes.indexOf(nome)>=0;
+          var isUnder6=r.guest_age!==null&&r.guest_age<6;
+          var item={name:r.guest_name,age:r.guest_age,group:r.family_group};
+          if(isIsento){isentosCount++;isentosList.push(Object.assign({},item,{reason:'Família (contrato)'}));}
+          else if(isUnder6){isentosCount++;isentosList.push(Object.assign({},item,{reason:'Menor de 6 anos'}));}
+          else{contamList.push(item);}
+        });
+        setGuestStats({total:totalP,contam:totalP-isentosCount,isentos:isentosCount,adultos:adultos,criancas:criancas,under6:under6,isentosList:isentosList,contamList:contamList,allList:data});
+      });
+    }).subscribe();
+    return function(){sb.removeChannel(channel)};
+  },[]);
+
   var gPct=GUEST_GOAL>0?Math.min(100,Math.round(guestStats.contam/GUEST_GOAL*100)):0;
 
   return React.createElement('div',null,
@@ -645,6 +676,72 @@ function DashboardPage(props) {
         )
       )
     ),
+    /* Notificações em tempo real */
+    notifications.length>0&&React.createElement('div',{className:'card',style:{marginBottom:16,borderLeft:'4px solid var(--green)'}},
+      React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'🔔 Confirmações Recentes (tempo real)')),
+      notifications.map(function(n){
+        return React.createElement('div',{key:n.id,style:{padding:'8px 0',borderBottom:'1px solid var(--gray-100)',fontSize:'0.82rem',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+          React.createElement('span',null,n.text),
+          React.createElement('span',{style:{fontSize:'0.7rem',color:'var(--gray-400)'}},n.time.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}))
+        );
+      })
+    ),
+
+    /* Gráfico visual — barra de ocupação do pacote */
+    React.createElement('div',{className:'card',style:{marginBottom:16}},
+      React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'📊 Ocupação do Pacote (100 vagas)')),
+      React.createElement('div',{style:{position:'relative',height:36,background:'var(--gray-100)',borderRadius:10,overflow:'hidden',marginTop:8}},
+        React.createElement('div',{style:{position:'absolute',left:0,top:0,height:'100%',width:Math.min(100,Math.round(guestStats.contam/GUEST_GOAL*100))+'%',background:'linear-gradient(90deg,var(--green),var(--blue))',borderRadius:10,transition:'width 1s ease'}}),
+        React.createElement('div',{style:{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.82rem',fontWeight:700,color:'var(--gray-800)'}},guestStats.contam+' / '+GUEST_GOAL+' ('+Math.round(guestStats.contam/GUEST_GOAL*100)+'%)')
+      ),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8,marginTop:12}},
+        React.createElement('div',{style:{textAlign:'center',padding:8,background:'var(--blue-light)',borderRadius:8}},
+          React.createElement('div',{style:{fontSize:'1.1rem',fontWeight:700,color:'var(--blue)'}},guestStats.adultos),
+          React.createElement('div',{style:{fontSize:'0.68rem',color:'var(--gray-500)'}},'Adultos')
+        ),
+        React.createElement('div',{style:{textAlign:'center',padding:8,background:'var(--pink-100)',borderRadius:8}},
+          React.createElement('div',{style:{fontSize:'1.1rem',fontWeight:700,color:'var(--pink-600)'}},guestStats.criancas),
+          React.createElement('div',{style:{fontSize:'0.68rem',color:'var(--gray-500)'}},'Crianças')
+        ),
+        React.createElement('div',{style:{textAlign:'center',padding:8,background:'var(--orange-light)',borderRadius:8}},
+          React.createElement('div',{style:{fontSize:'1.1rem',fontWeight:700,color:'var(--orange)'}},guestStats.isentos),
+          React.createElement('div',{style:{fontSize:'0.68rem',color:'var(--gray-500)'}},'Isentos')
+        ),
+        React.createElement('div',{style:{textAlign:'center',padding:8,background:'var(--green-light)',borderRadius:8}},
+          React.createElement('div',{style:{fontSize:'1.1rem',fontWeight:700,color:'var(--green)'}},Math.max(0,GUEST_GOAL-guestStats.contam)),
+          React.createElement('div',{style:{fontSize:'0.68rem',color:'var(--gray-500)'}},'Restam')
+        )
+      )
+    ),
+
+    /* Checklist de véspera */
+    (function(){
+      var daysLeft=Math.ceil((PARTY_DATE-new Date())/86400000);
+      if(daysLeft>30)return null;
+      var checks=[];
+      if(daysLeft<=30)checks.push({text:'Confirmar número final de convidados com o buffet',done:false,due:'Até 10/04'});
+      if(daysLeft<=21)checks.push({text:'Enviar lista de confirmados para o salão',done:false,due:'Até 15/04'});
+      if(daysLeft<=14)checks.push({text:'Comprar lembrancinhas para '+guestStats.criancas+' crianças',done:false,due:'Até 18/04'});
+      if(daysLeft<=10)checks.push({text:'Confirmar decoração Minnie Rosa com fornecedor',done:false,due:'Até 20/04'});
+      if(daysLeft<=7)checks.push({text:'Imprimir lista de presença para portaria ('+guestStats.total+' pessoas)',done:false,due:'Até 23/04'});
+      if(daysLeft<=5)checks.push({text:'Separar trajes/roupas da Maitê e família',done:false,due:'Até 24/04'});
+      if(daysLeft<=3)checks.push({text:'Reconfirmar horário com buffet e DJ',done:false,due:'Até 25/04'});
+      if(daysLeft<=1)checks.push({text:'Preparar bolsa com itens essenciais (fralda, remédio, etc.)',done:false,due:'Hoje!'});
+      if(checks.length===0)return null;
+      return React.createElement('div',{className:'card',style:{marginBottom:16,borderLeft:'4px solid var(--purple)'}},
+        React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'📋 Checklist — Faltam '+daysLeft+' dias!')),
+        checks.map(function(ck,i){
+          return React.createElement('div',{key:i,style:{padding:'10px 0',borderBottom:'1px solid var(--gray-100)',display:'flex',alignItems:'center',gap:10}},
+            React.createElement('div',{style:{width:20,height:20,borderRadius:6,border:'2px solid var(--purple)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12}}),
+            React.createElement('div',{style:{flex:1}},
+              React.createElement('div',{style:{fontSize:'0.82rem',fontWeight:500}},ck.text),
+              React.createElement('div',{style:{fontSize:'0.7rem',color:'var(--gray-400)',marginTop:2}},ck.due)
+            )
+          );
+        })
+      );
+    })(),
+
     React.createElement('div',{className:'card'},
       React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'Progresso — '+pct+'%')),
       React.createElement('div',{className:'progress-bar',style:{height:12}},React.createElement('div',{className:'progress-fill',style:{width:pct+'%',background:'linear-gradient(90deg,var(--pink-400),var(--pink-600))'}})),
@@ -1022,6 +1119,62 @@ function GuestsPage(props) {
     });
   }
 
+  function exportPDF(){
+    if(!sb){alert('Supabase não conectado');return}
+    setSyncMsg('Gerando PDF...');
+    sb.from('festa_rsvps').select('*').eq('status','confirmado').order('family_group').order('guest_age',{ascending:false,nullsFirst:false}).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      var data=res.data||[];
+      if(data.length===0){setSyncMsg('Nenhum confirmado');setTimeout(function(){setSyncMsg('')},3000);return}
+      var groups={};var groupOrder=[];
+      data.forEach(function(r){
+        var key=r.family_group||r.guest_name;
+        if(!groups[key]){groups[key]=[];groupOrder.push(key);}
+        groups[key].push(r);
+      });
+      var adultos=data.filter(function(r){return r.guest_age===null||r.guest_age>=12}).length;
+      var criancas=data.filter(function(r){return r.guest_age!==null&&r.guest_age<12}).length;
+      var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Lista de Convidados - Festa da Maitê</title>';
+      html+='<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;padding:30px;color:#333;font-size:12px}';
+      html+='h1{text-align:center;color:#BE185D;font-size:20px;margin-bottom:4px}';
+      html+='.sub{text-align:center;color:#6b7280;font-size:12px;margin-bottom:20px}';
+      html+='.stats{display:flex;justify-content:center;gap:20px;margin-bottom:20px;flex-wrap:wrap}';
+      html+='.stat{background:#fdf2f8;padding:8px 16px;border-radius:8px;text-align:center;font-size:11px}';
+      html+='.stat strong{display:block;font-size:16px;color:#BE185D}';
+      html+='table{width:100%;border-collapse:collapse;margin-bottom:20px}';
+      html+='th{background:#BE185D;color:#fff;padding:8px 6px;text-align:left;font-size:11px}';
+      html+='td{padding:6px;border-bottom:1px solid #e5e7eb;font-size:11px}';
+      html+='tr:nth-child(even){background:#fdf2f8}';
+      html+='.group-row{background:#fce7f3!important;font-weight:700;font-size:12px}';
+      html+='.footer{text-align:center;margin-top:20px;font-size:10px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:10px}';
+      html+='@media print{body{padding:15px}}</style></head><body>';
+      html+='<h1>🎀 Festa da Maitê — 5 Anos</h1>';
+      html+='<div class="sub">Lista de Convidados Confirmados — Minnie Rosa<br>26/04/2026 — 18:30 | Gerada em '+new Date().toLocaleDateString('pt-BR')+'</div>';
+      html+='<div class="stats">';
+      html+='<div class="stat"><strong>'+data.length+'</strong>Total</div>';
+      html+='<div class="stat"><strong>'+adultos+'</strong>Adultos</div>';
+      html+='<div class="stat"><strong>'+criancas+'</strong>Crianças</div>';
+      html+='<div class="stat"><strong>'+groupOrder.length+'</strong>Grupos</div>';
+      html+='</div>';
+      html+='<table><thead><tr><th>#</th><th>Nome Completo</th><th>Idade</th><th>Grupo</th></tr></thead><tbody>';
+      var num=1;
+      groupOrder.forEach(function(grp){
+        groups[grp].forEach(function(r){
+          html+='<tr><td>'+num+'</td><td>'+r.guest_name+'</td><td>'+(r.guest_age!==null?r.guest_age+' anos':'—')+'</td><td>'+grp+'</td></tr>';
+          num++;
+        });
+      });
+      html+='</tbody></table>';
+      html+='<div class="footer">Festa da Maitê — Documento gerado pela Central de Gestão</div>';
+      html+='</body></html>';
+      var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+      var w=window.open('','_blank');
+      if(w){w.document.write(html);w.document.close();setTimeout(function(){w.print()},500);}
+      else{var link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='lista-convidados-festa-maite.html';link.click();}
+      setSyncMsg('PDF pronto!');setTimeout(function(){setSyncMsg('')},3000);
+    });
+  }
+
   function openAdd(){setEdit(null);setForm(Object.assign({},emptyForm));setShow(true)}
   function openEdit(item){setEdit(item);setForm(Object.assign({},item));setShow(true)}
   function save(){
@@ -1078,6 +1231,7 @@ function GuestsPage(props) {
     allGuests.length>0&&React.createElement('div',{className:'card',style:{marginTop:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}},
       React.createElement('span',{style:{fontSize:'0.85rem',color:'var(--gray-600)',fontWeight:600}},'📤 Exportar lista de convidados'),
       React.createElement('div',{style:{display:'flex',gap:8}},
+        React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:exportPDF},'📄 PDF para Buffet'),
         React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:exportCSV},'📊 Baixar CSV'),
         React.createElement('button',{className:'btn btn-primary btn-sm',onClick:exportWhatsApp},'💬 Enviar via WhatsApp')
       )
