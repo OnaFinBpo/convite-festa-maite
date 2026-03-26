@@ -533,19 +533,21 @@ function DashboardPage(props) {
   var tp=d.vendors.reduce(function(s,v){return s+Number(v.paid||0)},0);
 
   /* Dados de convidados do Supabase */
-  var _g1=useState({total:0,contam:0,isentos:0,adultos:0,criancas:0,under6:0});
+  var _g1=useState({total:0,contam:0,isentos:0,adultos:0,criancas:0,under6:0,isentosList:[],contamList:[],allList:[]});
   var guestStats=_g1[0];var setGuestStats=_g1[1];
+  var _gm=useState(null);var guestModal=_gm[0];var setGuestModal=_gm[1];
 
   useEffect(function(){
     if(!sb)return;
-    sb.from('festa_rsvps').select('*').eq('status','confirmado').then(function(res){
+    sb.from('festa_rsvps').select('*').eq('status','confirmado').order('guest_name').then(function(res){
       if(res.error||!res.data)return;
       var data=res.data;
       var totalP=data.length;
       var under6=0;var adultos=0;var criancas=0;
-      /* Nomes isentos: aniversariante + pais + 2 irmãos (contrato permite max 2) */
-      var isentosNomes=['maitê souza nogueira','rodrigo mendes porto nogueira','vanniely caroline gonçalves souza','ana vitória pedro nogueira','igor pedro nogueira'];
-      /* Nota: Alicia (3ª irmã) NÃO é isenta pois contrato permite max 2 irmãos */
+      /* Nomes isentos: aniversariante + pais + 1 irmã (Alícia) */
+      var isentosNomes=['maitê souza nogueira','rodrigo mendes porto nogueira','vanniely caroline gonçalves souza','alicia silva souza luiz'];
+      /* Ana Vitória e Igor são filhos do Rodrigo, mas contam no pacote */
+      var isentosList=[];var contamList=[];
       data.forEach(function(r){
         if(r.guest_age!==null&&r.guest_age<12)criancas++;else adultos++;
         if(r.guest_age!==null&&r.guest_age<6)under6++;
@@ -555,10 +557,13 @@ function DashboardPage(props) {
         var nome=r.guest_name.toLowerCase().trim();
         var isIsento=isentosNomes.indexOf(nome)>=0;
         var isUnder6=r.guest_age!==null&&r.guest_age<6;
-        if(isIsento||isUnder6)isentosCount++;
+        var item={name:r.guest_name,age:r.guest_age,group:r.family_group};
+        if(isIsento){isentosCount++;isentosList.push(Object.assign({},item,{reason:'Família (contrato)'}));}
+        else if(isUnder6){isentosCount++;isentosList.push(Object.assign({},item,{reason:'Menor de 6 anos'}));}
+        else{contamList.push(item);}
       });
       var contam=totalP-isentosCount;
-      setGuestStats({total:totalP,contam:contam,isentos:isentosCount,adultos:adultos,criancas:criancas,under6:under6});
+      setGuestStats({total:totalP,contam:contam,isentos:isentosCount,adultos:adultos,criancas:criancas,under6:under6,isentosList:isentosList,contamList:contamList,allList:data});
     });
   },[]);
 
@@ -580,20 +585,23 @@ function DashboardPage(props) {
     ),
 
     /* Card de Contagem de Convidados (Supabase) */
-    React.createElement('div',{className:'card',style:{marginBottom:16,cursor:'pointer'},onClick:function(){sp('guests')}},
+    React.createElement('div',{className:'card',style:{marginBottom:16}},
       React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'📊 Contagem de Convidados — Pacote Buffet')),
       React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginTop:8}},
-        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--blue-light)',borderRadius:10}},
+        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--blue-light)',borderRadius:10,cursor:'pointer',transition:'transform .15s'},onClick:function(){setGuestModal('total')},onMouseOver:function(e){e.currentTarget.style.transform='scale(1.03)'},onMouseOut:function(e){e.currentTarget.style.transform='scale(1)'}},
           React.createElement('div',{style:{fontSize:'1.5rem',fontWeight:700,color:'var(--blue)'}},guestStats.total),
-          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Total confirmados')
+          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Total confirmados'),
+          React.createElement('div',{style:{fontSize:'0.65rem',color:'var(--blue)',marginTop:4,fontWeight:600}},'Toque para ver lista')
         ),
-        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--green-light)',borderRadius:10}},
+        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--green-light)',borderRadius:10,cursor:'pointer',transition:'transform .15s'},onClick:function(){setGuestModal('contam')},onMouseOver:function(e){e.currentTarget.style.transform='scale(1.03)'},onMouseOut:function(e){e.currentTarget.style.transform='scale(1)'}},
           React.createElement('div',{style:{fontSize:'1.5rem',fontWeight:700,color:'var(--green)'}},guestStats.contam),
-          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Contam no pacote')
+          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Contam no pacote'),
+          React.createElement('div',{style:{fontSize:'0.65rem',color:'var(--green)',marginTop:4,fontWeight:600}},'Toque para ver lista')
         ),
-        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--orange-light)',borderRadius:10}},
+        React.createElement('div',{style:{textAlign:'center',padding:'12px 8px',background:'var(--orange-light)',borderRadius:10,cursor:'pointer',transition:'transform .15s'},onClick:function(){setGuestModal('isentos')},onMouseOver:function(e){e.currentTarget.style.transform='scale(1.03)'},onMouseOut:function(e){e.currentTarget.style.transform='scale(1)'}},
           React.createElement('div',{style:{fontSize:'1.5rem',fontWeight:700,color:'var(--orange)'}},guestStats.isentos),
-          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Isentos (contrato)')
+          React.createElement('div',{style:{fontSize:'0.75rem',color:'var(--gray-500)',marginTop:2}},'Isentos (contrato)'),
+          React.createElement('div',{style:{fontSize:'0.65rem',color:'var(--orange)',marginTop:4,fontWeight:600}},'Toque para ver lista')
         )
       ),
       React.createElement('div',{style:{display:'flex',justifyContent:'space-between',marginTop:10,fontSize:'0.78rem',color:'var(--gray-500)'}},
@@ -601,7 +609,41 @@ function DashboardPage(props) {
         React.createElement('span',null,'🧒 Crianças: '+guestStats.criancas),
         React.createElement('span',null,'👶 < 6 anos: '+guestStats.under6)
       ),
-      React.createElement('div',{style:{fontSize:'0.72rem',color:'var(--gray-400)',marginTop:8,fontStyle:'italic'}},'Isentos: aniversariante + pais + 2 irmãos + crianças < 6 anos')
+      React.createElement('div',{style:{fontSize:'0.72rem',color:'var(--gray-400)',marginTop:8,fontStyle:'italic'}},'Isentos: aniversariante + pais + 1 irmã + crianças < 6 anos')
+    ),
+
+    /* Modal de lista de convidados por categoria */
+    guestModal&&React.createElement('div',{className:'modal-overlay',onClick:function(){setGuestModal(null)}},
+      React.createElement('div',{className:'modal-box',onClick:function(e){e.stopPropagation()},style:{maxHeight:'80vh',overflow:'auto'}},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}},
+          React.createElement('h3',{style:{fontSize:'1.1rem',color:'var(--pink-800)'}},
+            guestModal==='total'?'👥 Todos os Confirmados ('+guestStats.total+')':
+            guestModal==='contam'?'✅ Contam no Pacote ('+guestStats.contam+'/'+GUEST_GOAL+')':
+            '🔓 Isentos — Não Contam ('+guestStats.isentos+')'
+          ),
+          React.createElement('button',{onClick:function(){setGuestModal(null)},style:{background:'none',border:'none',fontSize:'1.4rem',cursor:'pointer',color:'var(--gray-500)'}},'✕')
+        ),
+        guestModal==='isentos'&&React.createElement('div',{style:{fontSize:'0.78rem',color:'var(--gray-500)',marginBottom:12,padding:'8px 12px',background:'var(--orange-light)',borderRadius:8}},'Conforme contrato: aniversariante, pais, 1 irmã (Alícia) e crianças menores de 6 anos.'),
+        guestModal==='contam'&&React.createElement('div',{style:{fontSize:'0.78rem',color:'var(--gray-500)',marginBottom:12,padding:'8px 12px',background:'var(--green-light)',borderRadius:8}},'Estas pessoas contam dentro do pacote de '+GUEST_GOAL+' do buffet.'),
+        React.createElement('table',{style:{width:'100%',fontSize:'0.82rem',borderCollapse:'collapse'}},
+          React.createElement('thead',null,React.createElement('tr',{style:{borderBottom:'2px solid var(--gray-200)'}},
+            React.createElement('th',{style:{textAlign:'left',padding:'8px 6px',color:'var(--gray-600)',fontWeight:600}},'#'),
+            React.createElement('th',{style:{textAlign:'left',padding:'8px 6px',color:'var(--gray-600)',fontWeight:600}},'Nome'),
+            React.createElement('th',{style:{textAlign:'center',padding:'8px 6px',color:'var(--gray-600)',fontWeight:600}},'Idade'),
+            guestModal==='isentos'&&React.createElement('th',{style:{textAlign:'left',padding:'8px 6px',color:'var(--gray-600)',fontWeight:600}},'Motivo')
+          )),
+          React.createElement('tbody',null,
+            (guestModal==='total'?(guestStats.allList||[]):guestModal==='contam'?(guestStats.contamList||[]):(guestStats.isentosList||[])).map(function(p,i){
+              return React.createElement('tr',{key:i,style:{borderBottom:'1px solid var(--gray-100)',background:i%2===0?'#fff':'var(--gray-50)'}},
+                React.createElement('td',{style:{padding:'8px 6px',color:'var(--gray-400)'}},i+1),
+                React.createElement('td',{style:{padding:'8px 6px',fontWeight:500}},p.guest_name||p.name),
+                React.createElement('td',{style:{padding:'8px 6px',textAlign:'center'}},p.guest_age!==null&&p.guest_age!==undefined?p.guest_age:(p.age!==null&&p.age!==undefined?p.age:'—')),
+                guestModal==='isentos'&&React.createElement('td',{style:{padding:'8px 6px',fontSize:'0.75rem',color:'var(--orange)'}},p.reason||'')
+              );
+            })
+          )
+        )
+      )
     ),
     React.createElement('div',{className:'card'},
       React.createElement('div',{className:'card-header'},React.createElement('span',{className:'card-title'},'Progresso — '+pct+'%')),
