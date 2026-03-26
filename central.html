@@ -943,6 +943,12 @@ function GuestsPage(props) {
   var _s6=useState([]);var rsvps=_s6[0];var setRsvps=_s6[1];
   var _s7=useState(false);var syncing=_s7[0];var setSyncing=_s7[1];
   var _s8=useState('');var syncMsg=_s8[0];var setSyncMsg=_s8[1];
+  /* NOVOS STATES */
+  var _s9=useState({});var expanded=_s9[0];var setExpanded=_s9[1]; /* grupos expandidos */
+  var _s10=useState({});var selected=_s10[0];var setSelected=_s10[1]; /* {groupName: true} para merge */
+  var _s11=useState(false);var showMerge=_s11[0];var setShowMerge=_s11[1];
+  var _s12=useState('');var mergeTarget=_s12[0];var setMergeTarget=_s12[1];
+  var _s13=useState(null);var confirmDel=_s13[0];var setConfirmDel=_s13[1]; /* {type:'guest'|'group', id, name} */
 
   // Carregar RSVPs do Supabase ao abrir a página
   useEffect(function(){fetchRsvps()},[]);
@@ -950,7 +956,7 @@ function GuestsPage(props) {
   function fetchRsvps(){
     if(!sb)return;
     setSyncing(true);setSyncMsg('');
-    sb.from('festa_rsvps').select('*').order('created_at',{ascending:true}).then(function(res){
+    sb.from('festa_rsvps').select('*').order('family_group').order('guest_age',{ascending:false,nullsFirst:false}).then(function(res){
       setSyncing(false);
       if(res.error){setSyncMsg('Erro: '+res.error.message);return}
       setRsvps(res.data||[]);
@@ -959,55 +965,79 @@ function GuestsPage(props) {
     });
   }
 
-  function importRsvps(){
-    if(rsvps.length===0){setSyncMsg('Nenhum RSVP para importar');setTimeout(function(){setSyncMsg('')},3000);return}
-    // Agrupar por family_group
-    var groups={};
-    rsvps.forEach(function(r){
-      var key=r.family_group||r.guest_name;
-      if(!groups[key])groups[key]={names:[],ages:[],status:r.status,created:r.created_at};
-      groups[key].names.push(r.guest_name);
-      groups[key].ages.push(r.guest_age);
+  /* ---- DELETE INDIVIDUAL (Supabase) ---- */
+  function deleteGuest(id,name){
+    if(!sb)return;
+    setSyncMsg('Excluindo '+name+'...');
+    sb.from('festa_rsvps').delete().eq('id',id).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      setRsvps(function(prev){return prev.filter(function(r){return r.id!==id})});
+      setSyncMsg(name+' excluído(a)!');
+      setConfirmDel(null);
+      setTimeout(function(){setSyncMsg('')},3000);
     });
-    var newGuests=[];
-    var existingNames=d.guests.map(function(g){return g.name.toLowerCase()});
-    Object.keys(groups).forEach(function(key){
-      var g=groups[key];
-      // Evitar duplicatas
-      if(existingNames.indexOf(key.toLowerCase())>=0)return;
-      var adults=0;var kids=0;
-      g.ages.forEach(function(age){if(age!==null&&age<12)kids++;else adults++});
-      var nameList=g.names.join(', ');
-      newGuests.push({
-        id:uid(),
-        name:key,
-        adults:adults,
-        kids:kids,
-        status:g.status||'confirmado',
-        phone:'',
-        notes:'Via convite: '+nameList,
-        dietary:''
-      });
+  }
+
+  /* ---- DELETE GRUPO INTEIRO (Supabase) ---- */
+  function deleteGroup(groupName){
+    if(!sb)return;
+    var ids=rsvps.filter(function(r){return (r.family_group||r.guest_name)===groupName}).map(function(r){return r.id});
+    if(ids.length===0)return;
+    setSyncMsg('Excluindo grupo '+groupName+' ('+ids.length+' pessoa(s))...');
+    sb.from('festa_rsvps').delete().in('id',ids).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      setRsvps(function(prev){return prev.filter(function(r){return ids.indexOf(r.id)<0})});
+      setSyncMsg('Grupo '+groupName+' excluído!');
+      setConfirmDel(null);
+      setTimeout(function(){setSyncMsg('')},3000);
     });
-    if(newGuests.length===0){setSyncMsg('Todos já importados!');setTimeout(function(){setSyncMsg('')},3000);return}
-    up('guests',function(prev){return prev.concat(newGuests)});
-    setSyncMsg(newGuests.length+' grupo(s) importado(s)!');
-    setTimeout(function(){setSyncMsg('')},4000);
+  }
+
+  /* ---- MERGE / UNIFICAR GRUPOS (Supabase) ---- */
+  function mergeGroups(){
+    if(!sb)return;
+    var selGroups=Object.keys(selected).filter(function(k){return selected[k]});
+    if(selGroups.length<2){alert('Selecione pelo menos 2 grupos para unificar');return}
+    if(!mergeTarget.trim()){alert('Defina o nome do novo grupo');return}
+    var ids=rsvps.filter(function(r){return selGroups.indexOf(r.family_group||r.guest_name)>=0}).map(function(r){return r.id});
+    if(ids.length===0)return;
+    setSyncMsg('Unificando '+selGroups.length+' grupos em "'+mergeTarget+'"...');
+    /* Atualizar family_group de todos os membros */
+    sb.from('festa_rsvps').update({family_group:mergeTarget.trim()}).in('id',ids).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      setRsvps(function(prev){return prev.map(function(r){
+        if(ids.indexOf(r.id)>=0)return Object.assign({},r,{family_group:mergeTarget.trim()});
+        return r;
+      })});
+      setSyncMsg(ids.length+' pessoa(s) unificadas no grupo "'+mergeTarget+'"!');
+      setSelected({});setShowMerge(false);setMergeTarget('');
+      setTimeout(function(){setSyncMsg('')},4000);
+    });
+  }
+
+  /* ---- TOGGLE SELEÇÃO DE GRUPO ---- */
+  function toggleSelect(groupName){
+    setSelected(function(prev){var n=Object.assign({},prev);if(n[groupName])delete n[groupName];else n[groupName]=true;return n});
+  }
+  var selectedCount=Object.keys(selected).filter(function(k){return selected[k]}).length;
+
+  /* ---- TOGGLE EXPANDIR GRUPO ---- */
+  function toggleExpand(groupName){
+    setExpanded(function(prev){var n=Object.assign({},prev);n[groupName]=!n[groupName];return n});
   }
 
   // Contagem direta do Supabase (fonte única de verdade)
-  var rsvpGroups={};
+  var rsvpGroups={};var groupOrder=[];
   rsvps.forEach(function(r){
     var key=r.family_group||r.guest_name;
-    if(!rsvpGroups[key])rsvpGroups[key]={names:[],ages:[],status:r.status};
-    rsvpGroups[key].names.push(r.guest_name);
-    rsvpGroups[key].ages.push(r.guest_age);
+    if(!rsvpGroups[key]){rsvpGroups[key]={members:[],status:r.status};groupOrder.push(key)}
+    rsvpGroups[key].members.push(r);
   });
-  var allGuests=Object.keys(rsvpGroups).map(function(key){
+  var allGroups=groupOrder.map(function(key){
     var g=rsvpGroups[key];
     var adults=0;var kids=0;
-    g.ages.forEach(function(age){if(age!==null&&age<12)kids++;else adults++});
-    return {id:key,name:key,adults:adults,kids:kids,status:g.status||'confirmado',phone:'',notes:g.names.join(', '),dietary:''};
+    g.members.forEach(function(m){if(m.guest_age!==null&&m.guest_age<12)kids++;else adults++});
+    return {name:key,members:g.members,adults:adults,kids:kids,status:g.status||'confirmado',total:g.members.length};
   });
   var ta=rsvps.filter(function(r){return r.guest_age===null||r.guest_age>=12}).length;
   var tk=rsvps.filter(function(r){return r.guest_age!==null&&r.guest_age<12}).length;
@@ -1015,9 +1045,14 @@ function GuestsPage(props) {
   var ca=conf.filter(function(r){return r.guest_age===null||r.guest_age>=12}).length;
   var ck=conf.filter(function(r){return r.guest_age!==null&&r.guest_age<12}).length;
 
-  var filtered=allGuests.filter(function(g){
+  var filtered=allGroups.filter(function(g){
     if(filter!=='all'&&g.status!==filter)return false;
-    if(search&&g.name.toLowerCase().indexOf(search.toLowerCase())<0)return false;
+    if(search){
+      var s=search.toLowerCase();
+      var nameMatch=g.name.toLowerCase().indexOf(s)>=0;
+      var memberMatch=g.members.some(function(m){return m.guest_name.toLowerCase().indexOf(s)>=0});
+      if(!nameMatch&&!memberMatch)return false;
+    }
     return true;
   });
 
@@ -1175,19 +1210,22 @@ function GuestsPage(props) {
     });
   }
 
+  /* Funções add/edit de convidado manual via Supabase */
   function openAdd(){setEdit(null);setForm(Object.assign({},emptyForm));setShow(true)}
-  function openEdit(item){setEdit(item);setForm(Object.assign({},item));setShow(true)}
   function save(){
     if(!form.name){alert('Preencha o nome');return}
-    var entry=Object.assign({},form,{adults:Number(form.adults)||0,kids:Number(form.kids)||0});
-    if(edit){up('guests',function(prev){return prev.map(function(g){return g.id===edit.id?Object.assign({},g,entry):g})})}
-    else{up('guests',function(prev){return prev.concat([Object.assign({id:uid()},entry)])})}
-    setShow(false);
+    if(!sb){alert('Supabase não conectado');return}
+    var entry={guest_name:form.name.trim(),guest_age:form.adults>=18?Number(form.adults):null,family_group:form.name.trim(),status:form.status||'confirmado',phone:form.phone||null};
+    setSyncMsg('Salvando...');
+    sb.from('festa_rsvps').insert([entry]).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      fetchRsvps();setShow(false);
+      setSyncMsg('Convidado adicionado!');setTimeout(function(){setSyncMsg('')},3000);
+    });
   }
-  function remove(id){up('guests',function(prev){return prev.filter(function(g){return g.id!==id})})}
 
   return React.createElement('div',null,
-    React.createElement(PageNav,{title:'Convidados',subtitle:'Lista completa e controle de RSVP',showBack:true,goHome:gh,action:React.createElement('button',{className:'btn btn-primary',onClick:openAdd},React.createElement(Ic.Plus,null),' Novo Convidado')}),
+    React.createElement(PageNav,{title:'Convidados',subtitle:'Lista completa e controle de RSVP — Supabase em tempo real',showBack:true,goHome:gh,action:React.createElement('button',{className:'btn btn-primary',onClick:openAdd},React.createElement(Ic.Plus,null),' Novo Convidado')}),
 
     /* Barra de Sincronização Supabase */
     React.createElement('div',{className:'card',style:{marginBottom:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}},
@@ -1203,32 +1241,90 @@ function GuestsPage(props) {
     ),
 
     React.createElement('div',{className:'kpi-grid',style:{gridTemplateColumns:'repeat(4,1fr)'}},
-      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGuests.length),React.createElement('p',null,'Grupos'))),
+      React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--pink-500)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,allGroups.length),React.createElement('p',null,'Grupos'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--blue)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,rsvps.length),React.createElement('p',null,ta+' ad. + '+tk+' cr.'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--green)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,ca+ck),React.createElement('p',null,'Confirmados'))),
       React.createElement('div',{className:'kpi-card',style:{borderLeftColor:'var(--orange)'}},React.createElement('div',{className:'kpi-info'},React.createElement('h3',null,rsvps.filter(function(r){return r.status==='pendente'}).length),React.createElement('p',null,'Pendentes')))
     ),
-    React.createElement('div',{className:'search-box'},React.createElement(Ic.Search,null),React.createElement('input',{type:'text',placeholder:'Buscar convidado...',value:search,onChange:function(e){setSearch(e.target.value)}})),
+
+    /* Barra de ações: Merge quando há seleção */
+    selectedCount>=2&&React.createElement('div',{className:'card',style:{marginBottom:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8,background:'var(--purple-light)',borderColor:'var(--purple)'}},
+      React.createElement('span',{style:{fontSize:'0.85rem',color:'var(--purple)',fontWeight:700}},'🔗 '+selectedCount+' grupo(s) selecionado(s)'),
+      React.createElement('div',{style:{display:'flex',gap:8}},
+        React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:function(){setSelected({})}},'✖ Limpar'),
+        React.createElement('button',{className:'btn btn-primary btn-sm',style:{background:'var(--purple)'},onClick:function(){setMergeTarget('');setShowMerge(true)}},'🔗 Unificar Grupos')
+      )
+    ),
+
+    React.createElement('div',{className:'search-box'},React.createElement(Ic.Search,null),React.createElement('input',{type:'text',placeholder:'Buscar convidado ou grupo...',value:search,onChange:function(e){setSearch(e.target.value)}})),
     React.createElement('div',{className:'filter-row'},
       [['all','Todos'],['pendente','Pendentes'],['confirmado','Confirmados'],['recusado','Recusados']].map(function(pair){return React.createElement('div',{key:pair[0],className:'filter-chip'+(filter===pair[0]?' active':''),onClick:function(){setFilter(pair[0])}},pair[1])})
     ),
+
+    /* TABELA COM GRUPOS EXPANSÍVEIS */
     React.createElement('div',{className:'card'},React.createElement('div',{className:'table-wrap'},React.createElement('table',null,
-      React.createElement('thead',null,React.createElement('tr',null,React.createElement('th',null,'Nome'),React.createElement('th',null,'Ad.'),React.createElement('th',null,'Cr.'),React.createElement('th',null,'Tel.'),React.createElement('th',null,'Status'),React.createElement('th',null,''))),
+      React.createElement('thead',null,React.createElement('tr',null,
+        React.createElement('th',{style:{width:32}},''),
+        React.createElement('th',null,'Grupo / Nome'),
+        React.createElement('th',{style:{textAlign:'center'}},'Pessoas'),
+        React.createElement('th',{style:{textAlign:'center'}},'Ad.'),
+        React.createElement('th',{style:{textAlign:'center'}},'Cr.'),
+        React.createElement('th',null,'Status'),
+        React.createElement('th',{style:{width:80,textAlign:'center'}},'Ações')
+      )),
       React.createElement('tbody',null,
-        filtered.length===0&&React.createElement('tr',null,React.createElement('td',{colSpan:6,style:{textAlign:'center',padding:30,color:'var(--gray-400)'}},'Nenhum convidado cadastrado')),
-        filtered.map(function(g){return React.createElement('tr',{key:g.id},
-          React.createElement('td',null,React.createElement('strong',null,g.name),g.notes&&React.createElement('div',{style:{fontSize:'0.7rem',color:'var(--gray-400)'}},g.notes)),
-          React.createElement('td',{style:{textAlign:'center'}},g.adults),
-          React.createElement('td',{style:{textAlign:'center'}},g.kids),
-          React.createElement('td',{style:{fontSize:'0.8rem'}},g.phone||'—'),
-          React.createElement('td',null,React.createElement('span',{className:'badge '+(g.status==='confirmado'?'badge-green':g.status==='recusado'?'badge-red':'badge-orange')},g.status)),
-          React.createElement('td',null,React.createElement('button',{className:'btn btn-icon btn-secondary',onClick:function(){openEdit(g)}},React.createElement(Ic.Edit,null)))
-        )})
+        filtered.length===0&&React.createElement('tr',null,React.createElement('td',{colSpan:7,style:{textAlign:'center',padding:30,color:'var(--gray-400)'}},'Nenhum convidado encontrado')),
+        filtered.map(function(g){
+          var isExpanded=expanded[g.name];
+          var isSelected=selected[g.name];
+          var rows=[];
+          /* LINHA DO GRUPO (header) */
+          rows.push(React.createElement('tr',{key:'g-'+g.name,style:{background:isSelected?'var(--purple-light)':'var(--pink-50)',cursor:'pointer'}},
+            React.createElement('td',{style:{textAlign:'center'}},
+              React.createElement('input',{type:'checkbox',checked:!!isSelected,onChange:function(){toggleSelect(g.name)},style:{width:16,height:16,cursor:'pointer',accentColor:'var(--purple)'},title:'Selecionar para unificar'})
+            ),
+            React.createElement('td',{onClick:function(){toggleExpand(g.name)},style:{cursor:'pointer'}},
+              React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8}},
+                React.createElement('span',{style:{fontSize:'0.7rem',transition:'transform .2s',transform:isExpanded?'rotate(90deg)':'rotate(0deg)',display:'inline-block'}},'▶'),
+                React.createElement('strong',{style:{color:'var(--pink-800)'}},g.name),
+                React.createElement('span',{style:{fontSize:'0.7rem',color:'var(--gray-400)',background:'var(--gray-100)',padding:'2px 8px',borderRadius:99}},g.total+' pessoa(s)')
+              )
+            ),
+            React.createElement('td',{style:{textAlign:'center',fontWeight:700}},g.total),
+            React.createElement('td',{style:{textAlign:'center'}},g.adults),
+            React.createElement('td',{style:{textAlign:'center'}},g.kids),
+            React.createElement('td',null,React.createElement('span',{className:'badge '+(g.status==='confirmado'?'badge-green':g.status==='recusado'?'badge-red':'badge-orange')},g.status)),
+            React.createElement('td',{style:{textAlign:'center'}},
+              React.createElement('button',{className:'btn btn-icon btn-secondary',onClick:function(){setConfirmDel({type:'group',name:g.name,count:g.total})},title:'Excluir grupo inteiro',style:{color:'var(--red)',fontSize:'0.8rem'}},'🗑')
+            )
+          ));
+          /* LINHAS DOS MEMBROS (expandido) */
+          if(isExpanded){
+            g.members.forEach(function(m){
+              rows.push(React.createElement('tr',{key:'m-'+m.id,style:{background:'#fff'}},
+                React.createElement('td',null),
+                React.createElement('td',{style:{paddingLeft:36}},
+                  React.createElement('span',null,m.guest_name),
+                  m.guest_age!==null&&React.createElement('span',{style:{marginLeft:8,fontSize:'0.75rem',color:'var(--gray-400)'}},m.guest_age+' anos'),
+                  m.guest_age!==null&&m.guest_age<6&&React.createElement('span',{style:{marginLeft:4,fontSize:'0.7rem',background:'var(--orange-light)',color:'var(--orange)',padding:'1px 6px',borderRadius:4}},'isento < 6')
+                ),
+                React.createElement('td',null),
+                React.createElement('td',{style:{textAlign:'center',fontSize:'0.8rem'}},m.guest_age===null||m.guest_age>=12?'✓':''),
+                React.createElement('td',{style:{textAlign:'center',fontSize:'0.8rem'}},m.guest_age!==null&&m.guest_age<12?'✓':''),
+                React.createElement('td',null,React.createElement('span',{className:'badge '+(m.status==='confirmado'?'badge-green':m.status==='recusado'?'badge-red':'badge-orange'),style:{fontSize:'0.65rem'}},m.status)),
+                React.createElement('td',{style:{textAlign:'center'}},
+                  React.createElement('button',{className:'btn btn-icon btn-secondary',onClick:function(){setConfirmDel({type:'guest',id:m.id,name:m.guest_name})},title:'Excluir esta pessoa',style:{color:'var(--red)',fontSize:'0.75rem'}},'✕')
+                )
+              ));
+            });
+          }
+          return rows;
+        }).flat()
       )
     ))),
 
     /* Barra de Exportação */
-    allGuests.length>0&&React.createElement('div',{className:'card',style:{marginTop:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}},
+    allGroups.length>0&&React.createElement('div',{className:'card',style:{marginTop:16,padding:'12px 16px',display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:8}},
       React.createElement('span',{style:{fontSize:'0.85rem',color:'var(--gray-600)',fontWeight:600}},'📤 Exportar lista de convidados'),
       React.createElement('div',{style:{display:'flex',gap:8}},
         React.createElement('button',{className:'btn btn-secondary btn-sm',onClick:exportPDF},'📄 PDF para Buffet'),
@@ -1237,22 +1333,65 @@ function GuestsPage(props) {
       )
     ),
 
-    show&&React.createElement(Modal,{title:edit?'Editar Convidado':'Novo Convidado',onClose:function(){setShow(false)}},
-      React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Nome / Família'),React.createElement('input',{type:'text',value:form.name,placeholder:'Ex: Família Silva',onChange:function(e){setForm(Object.assign({},form,{name:e.target.value}))}})),
-      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12}},
-        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Adultos'),React.createElement('input',{type:'number',min:'0',value:form.adults,onChange:function(e){setForm(Object.assign({},form,{adults:e.target.value}))}})),
-        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Crianças'),React.createElement('input',{type:'number',min:'0',value:form.kids,onChange:function(e){setForm(Object.assign({},form,{kids:e.target.value}))}})),
-        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Status'),React.createElement('select',{value:form.status,onChange:function(e){setForm(Object.assign({},form,{status:e.target.value}))}},React.createElement('option',{value:'pendente'},'Pendente'),React.createElement('option',{value:'confirmado'},'Confirmado'),React.createElement('option',{value:'recusado'},'Recusado')))
+    /* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */
+    confirmDel&&React.createElement(Modal,{title:'Confirmar Exclusão',onClose:function(){setConfirmDel(null)}},
+      confirmDel.type==='guest'?
+        React.createElement('div',null,
+          React.createElement('p',{style:{marginBottom:16,fontSize:'0.95rem'}},'Tem certeza que deseja excluir '),
+          React.createElement('p',{style:{fontWeight:700,fontSize:'1.1rem',color:'var(--red)',marginBottom:16}},confirmDel.name),
+          React.createElement('p',{style:{fontSize:'0.8rem',color:'var(--gray-500)',marginBottom:20}},'Esta ação remove a pessoa permanentemente do banco de dados.'),
+          React.createElement('div',{className:'modal-actions'},
+            React.createElement('button',{className:'btn btn-secondary',onClick:function(){setConfirmDel(null)}},'Cancelar'),
+            React.createElement('button',{className:'btn btn-danger',onClick:function(){deleteGuest(confirmDel.id,confirmDel.name)}},'🗑 Excluir Pessoa')
+          )
+        )
+      :
+        React.createElement('div',null,
+          React.createElement('p',{style:{marginBottom:16,fontSize:'0.95rem'}},'Tem certeza que deseja excluir o grupo inteiro?'),
+          React.createElement('p',{style:{fontWeight:700,fontSize:'1.1rem',color:'var(--red)',marginBottom:8}},confirmDel.name),
+          React.createElement('p',{style:{fontSize:'0.85rem',color:'var(--orange)',fontWeight:600,marginBottom:16}},'⚠ '+confirmDel.count+' pessoa(s) serão removidas permanentemente!'),
+          React.createElement('div',{className:'modal-actions'},
+            React.createElement('button',{className:'btn btn-secondary',onClick:function(){setConfirmDel(null)}},'Cancelar'),
+            React.createElement('button',{className:'btn btn-danger',onClick:function(){deleteGroup(confirmDel.name)}},'🗑 Excluir Grupo Inteiro')
+          )
+        )
+    ),
+
+    /* MODAL DE UNIFICAR GRUPOS */
+    showMerge&&React.createElement(Modal,{title:'Unificar Grupos',onClose:function(){setShowMerge(false)}},
+      React.createElement('p',{style:{marginBottom:16,fontSize:'0.9rem',color:'var(--gray-600)'}},'Os grupos selecionados serão unificados sob um único nome. Todos os membros passarão a pertencer ao novo grupo.'),
+      React.createElement('div',{style:{marginBottom:16}},
+        React.createElement('p',{style:{fontSize:'0.8rem',fontWeight:700,color:'var(--gray-700)',marginBottom:8}},'Grupos selecionados:'),
+        Object.keys(selected).filter(function(k){return selected[k]}).map(function(gn){
+          var count=rsvps.filter(function(r){return(r.family_group||r.guest_name)===gn}).length;
+          return React.createElement('div',{key:gn,style:{display:'flex',alignItems:'center',gap:8,padding:'4px 0'}},
+            React.createElement('span',{style:{fontSize:'0.85rem'}},gn),
+            React.createElement('span',{style:{fontSize:'0.7rem',color:'var(--gray-400)'}},'('+count+' pessoa(s))')
+          );
+        })
       ),
-      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
-        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Telefone'),React.createElement('input',{type:'tel',value:form.phone,onChange:function(e){setForm(Object.assign({},form,{phone:e.target.value}))}})),
-        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Restrição Alimentar'),React.createElement('input',{type:'text',value:form.dietary,onChange:function(e){setForm(Object.assign({},form,{dietary:e.target.value}))}}))
+      React.createElement('div',{className:'form-group'},
+        React.createElement('label',{className:'form-label'},'Nome do novo grupo unificado'),
+        React.createElement('input',{type:'text',value:mergeTarget,placeholder:'Ex: Família Silva Completa',onChange:function(e){setMergeTarget(e.target.value)},style:{fontWeight:600}})
       ),
-      React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Observações'),React.createElement('textarea',{value:form.notes,onChange:function(e){setForm(Object.assign({},form,{notes:e.target.value}))}})),
+      React.createElement('div',{style:{marginBottom:16,padding:12,background:'var(--orange-light)',borderRadius:8,fontSize:'0.8rem',color:'var(--gray-700)'}},'ℹ️ Dica: Você pode escolher o nome de um dos grupos existentes ou criar um novo nome.'),
       React.createElement('div',{className:'modal-actions'},
-        edit&&React.createElement('button',{className:'btn btn-danger btn-sm',onClick:function(){remove(edit.id);setShow(false)}},'Excluir'),
+        React.createElement('button',{className:'btn btn-secondary',onClick:function(){setShowMerge(false)}},'Cancelar'),
+        React.createElement('button',{className:'btn btn-primary',style:{background:'var(--purple)'},onClick:mergeGroups},'🔗 Unificar '+selectedCount+' Grupos')
+      )
+    ),
+
+    /* MODAL NOVO CONVIDADO (manual) */
+    show&&React.createElement(Modal,{title:'Novo Convidado (Manual)',onClose:function(){setShow(false)}},
+      React.createElement('p',{style:{fontSize:'0.82rem',color:'var(--gray-500)',marginBottom:16}},'Adiciona um convidado direto no Supabase (sem passar pelo convite online).'),
+      React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Nome Completo'),React.createElement('input',{type:'text',value:form.name,placeholder:'Ex: João Silva',onChange:function(e){setForm(Object.assign({},form,{name:e.target.value}))}})),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Status'),React.createElement('select',{value:form.status,onChange:function(e){setForm(Object.assign({},form,{status:e.target.value}))}},React.createElement('option',{value:'confirmado'},'Confirmado'),React.createElement('option',{value:'pendente'},'Pendente'))),
+        React.createElement('div',{className:'form-group'},React.createElement('label',{className:'form-label'},'Telefone'),React.createElement('input',{type:'tel',value:form.phone,placeholder:'(11) 99999-0000',onChange:function(e){setForm(Object.assign({},form,{phone:e.target.value}))}}))
+      ),
+      React.createElement('div',{className:'modal-actions'},
         React.createElement('button',{className:'btn btn-secondary',onClick:function(){setShow(false)}},'Cancelar'),
-        React.createElement('button',{className:'btn btn-primary',onClick:save},'Salvar')
+        React.createElement('button',{className:'btn btn-primary',onClick:save},'Salvar no Supabase')
       )
     )
   );
