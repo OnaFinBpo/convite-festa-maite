@@ -949,6 +949,7 @@ function GuestsPage(props) {
   var _s11=useState(false);var showMerge=_s11[0];var setShowMerge=_s11[1];
   var _s12=useState('');var mergeTarget=_s12[0];var setMergeTarget=_s12[1];
   var _s13=useState(null);var confirmDel=_s13[0];var setConfirmDel=_s13[1]; /* {type:'guest'|'group', id, name} */
+  var _s14=useState(null);var editMember=_s14[0];var setEditMember=_s14[1]; /* {id, guest_name, guest_age, family_group, status, phone} */
 
   // Carregar RSVPs do Supabase ao abrir a página
   useEffect(function(){fetchRsvps()},[]);
@@ -989,6 +990,30 @@ function GuestsPage(props) {
       setRsvps(function(prev){return prev.filter(function(r){return ids.indexOf(r.id)<0})});
       setSyncMsg('Grupo '+groupName+' excluído!');
       setConfirmDel(null);
+      setTimeout(function(){setSyncMsg('')},3000);
+    });
+  }
+
+  /* ---- EDITAR MEMBRO INDIVIDUAL (Supabase) ---- */
+  function openEditMember(member){
+    setEditMember({id:member.id,guest_name:member.guest_name||'',guest_age:member.guest_age!==null?String(member.guest_age):'',family_group:member.family_group||'',status:member.status||'confirmado',phone:member.phone||''});
+  }
+  function saveEditMember(){
+    if(!sb||!editMember)return;
+    if(!editMember.guest_name.trim()){alert('Preencha o nome');return}
+    var upd={
+      guest_name:editMember.guest_name.trim(),
+      guest_age:editMember.guest_age!==''?Number(editMember.guest_age):null,
+      family_group:editMember.family_group.trim()||editMember.guest_name.trim(),
+      status:editMember.status,
+      phone:editMember.phone||null
+    };
+    setSyncMsg('Salvando alterações...');
+    sb.from('festa_rsvps').update(upd).eq('id',editMember.id).then(function(res){
+      if(res.error){setSyncMsg('Erro: '+res.error.message);return}
+      setRsvps(function(prev){return prev.map(function(r){return r.id===editMember.id?Object.assign({},r,upd):r})});
+      setEditMember(null);
+      setSyncMsg('Convidado atualizado!');
       setTimeout(function(){setSyncMsg('')},3000);
     });
   }
@@ -1312,8 +1337,9 @@ function GuestsPage(props) {
                 React.createElement('td',{style:{textAlign:'center',fontSize:'0.8rem'}},m.guest_age===null||m.guest_age>=12?'✓':''),
                 React.createElement('td',{style:{textAlign:'center',fontSize:'0.8rem'}},m.guest_age!==null&&m.guest_age<12?'✓':''),
                 React.createElement('td',null,React.createElement('span',{className:'badge '+(m.status==='confirmado'?'badge-green':m.status==='recusado'?'badge-red':'badge-orange'),style:{fontSize:'0.65rem'}},m.status)),
-                React.createElement('td',{style:{textAlign:'center'}},
-                  React.createElement('button',{className:'btn btn-icon btn-secondary',onClick:function(){setConfirmDel({type:'guest',id:m.id,name:m.guest_name})},title:'Excluir esta pessoa',style:{color:'var(--red)',fontSize:'0.75rem'}},'✕')
+                React.createElement('td',{style:{textAlign:'center',display:'flex',gap:4,justifyContent:'center'}},
+                  React.createElement('button',{className:'btn btn-icon btn-secondary',onClick:(function(member){return function(){openEditMember(member)}})(m),title:'Editar nome/idade',style:{color:'var(--blue)',fontSize:'0.75rem'}},'✎'),
+                  React.createElement('button',{className:'btn btn-icon btn-secondary',onClick:(function(member){return function(){setConfirmDel({type:'guest',id:member.id,name:member.guest_name})}})(m),title:'Excluir esta pessoa',style:{color:'var(--red)',fontSize:'0.75rem'}},'✕')
                 )
               ));
             });
@@ -1378,6 +1404,43 @@ function GuestsPage(props) {
       React.createElement('div',{className:'modal-actions'},
         React.createElement('button',{className:'btn btn-secondary',onClick:function(){setShowMerge(false)}},'Cancelar'),
         React.createElement('button',{className:'btn btn-primary',style:{background:'var(--purple)'},onClick:mergeGroups},'🔗 Unificar '+selectedCount+' Grupos')
+      )
+    ),
+
+    /* MODAL EDITAR MEMBRO */
+    editMember&&React.createElement(Modal,{title:'Editar Convidado',onClose:function(){setEditMember(null)}},
+      React.createElement('div',{className:'form-group'},
+        React.createElement('label',{className:'form-label'},'Nome Completo'),
+        React.createElement('input',{type:'text',value:editMember.guest_name,onChange:function(e){setEditMember(Object.assign({},editMember,{guest_name:e.target.value}))}})
+      ),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',{className:'form-label'},'Idade'),
+          React.createElement('input',{type:'number',min:'0',max:'120',value:editMember.guest_age,placeholder:'Deixe vazio se não souber',onChange:function(e){setEditMember(Object.assign({},editMember,{guest_age:e.target.value}))}})
+        ),
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',{className:'form-label'},'Status'),
+          React.createElement('select',{value:editMember.status,onChange:function(e){setEditMember(Object.assign({},editMember,{status:e.target.value}))}},
+            React.createElement('option',{value:'confirmado'},'Confirmado'),
+            React.createElement('option',{value:'pendente'},'Pendente'),
+            React.createElement('option',{value:'recusado'},'Recusado')
+          )
+        )
+      ),
+      React.createElement('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}},
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',{className:'form-label'},'Grupo / Família'),
+          React.createElement('input',{type:'text',value:editMember.family_group,onChange:function(e){setEditMember(Object.assign({},editMember,{family_group:e.target.value}))}})
+        ),
+        React.createElement('div',{className:'form-group'},
+          React.createElement('label',{className:'form-label'},'Telefone'),
+          React.createElement('input',{type:'tel',value:editMember.phone,placeholder:'(11) 99999-0000',onChange:function(e){setEditMember(Object.assign({},editMember,{phone:e.target.value}))}})
+        )
+      ),
+      React.createElement('div',{style:{padding:10,background:'var(--blue-light)',borderRadius:8,fontSize:'0.78rem',color:'var(--gray-600)',marginBottom:12}},'💡 Alterar o campo "Grupo / Família" move esta pessoa para outro grupo.'),
+      React.createElement('div',{className:'modal-actions'},
+        React.createElement('button',{className:'btn btn-secondary',onClick:function(){setEditMember(null)}},'Cancelar'),
+        React.createElement('button',{className:'btn btn-primary',onClick:saveEditMember},'Salvar Alterações')
       )
     ),
 
